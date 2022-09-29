@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - kyverno-adapter.nirmata.io
+  resources:
+  - aws
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kyverno-adapter.nirmata.io
+  resources:
+  - aws/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kyverno-adapter.nirmata.io
+  resources:
+  - aws/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,13 @@
+apiVersion: security.nirmata.io/v1alpha1
+kind: AWSConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: aws
+    app.kubernetes.io/instance: aws-sample
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+  name: eks-status
+spec:
+  name: eks-test
+  region: us-west-1

@@ -1,0 +1,16 @@
+domain: nirmata.io
+layout:
+- go.kubebuilder.io/v3
+projectName: kyverno-aws-adapter
+repo: github.com/nirmata/kyverno-aws-adapter
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: nirmata.io
+  group: kyverno-adapter
+  kind: AWS
+  path: github.com/nirmata/kyverno-aws-adapter/api/v1alpha1
+  version: v1alpha1
+version: "3"

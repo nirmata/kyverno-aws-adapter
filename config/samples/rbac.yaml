@@ -1,0 +1,43 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kyverno-adapter.nirmata.io:aws:awscrd
+rules:
+- apiGroups: ["kyverno-adapter.nirmata.io"]
+  resources: ["aws"]
+  verbs: ["get","list","create","update","watch","delete","patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kyverno-adapter.nirmata.io:aws:awsstatus
+rules:
+- apiGroups: ["kyverno-adapter.nirmata.io"]
+  resources: ["aws/status"]
+  verbs: ["get","list","create","update","watch","delete","patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: adapter-clusterrolebinding-awscrd
+subjects:
+- kind: ServiceAccount
+  name: iam-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: kyverno-adapter.nirmata.io:aws:awscrd
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: adapter-clusterrolebinding-awsstatus
+subjects:
+- kind: ServiceAccount
+  name: iam-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: kyverno-adapter.nirmata.io:aws:awsstatus
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,31 @@
+# permissions for end users to edit aws.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: aws-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/managed-by: kustomize
+  name: aws-editor-role
+rules:
+- apiGroups:
+  - kyverno-adapter.nirmata.io
+  resources:
+  - aws
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kyverno-adapter.nirmata.io
+  resources:
+  - aws/status
+  verbs:
+  - get
