@@ -23,8 +23,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// AWSSpec defines the desired state of AWS
-type AWSSpec struct {
+// AWSConfigSpec defines the desired state of AWSConfig
+type AWSConfigSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -151,8 +151,8 @@ type EKSLogging struct {
 	Scheduler         *bool `json:"scheduler,omitempty"`
 }
 
-// AWSStatus defines the observed state of AWS
-type AWSStatus struct {
+// AWSConfigStatus defines the observed state of AWSConfig
+type AWSConfigStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	EKSCluster *EKSCluster `json:"eksCluster"`
@@ -169,24 +169,24 @@ type AWSStatus struct {
 //+kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.status.eksCluster.endpoint`
 //+kubebuilder:printcolumn:name="Role Arn",type=string,JSONPath=`.status.eksCluster.arn`
 
-// AWS is the Schema for the aws API
-type AWS struct {
+// AWSConfig is the Schema for the awsconfigs API
+type AWSConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AWSSpec   `json:"spec,omitempty"`
-	Status AWSStatus `json:"status,omitempty"`
+	Spec   AWSConfigSpec   `json:"spec,omitempty"`
+	Status AWSConfigStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// AWSList contains a list of AWS
-type AWSList struct {
+// AWSConfigList contains a list of AWSConfig
+type AWSConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AWS `json:"items"`
+	Items           []AWSConfig `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AWS{}, &AWSList{})
+	SchemeBuilder.Register(&AWSConfig{}, &AWSConfigList{})
 }

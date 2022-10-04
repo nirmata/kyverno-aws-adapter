@@ -5,14 +5,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: aws.kyverno-adapter.nirmata.io
+  name: awsconfigs.security.nirmata.io
 spec:
-  group: kyverno-adapter.nirmata.io
+  group: security.nirmata.io
   names:
-    kind: AWS
-    listKind: AWSList
-    plural: aws
-    singular: aws
+    kind: AWSConfig
+    listKind: AWSConfigList
+    plural: awsconfigs
+    singular: awsconfig
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -43,7 +43,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AWS is the Schema for the aws API
+        description: AWSConfig is the Schema for the awsconfigs API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -58,7 +58,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: AWSSpec defines the desired state of AWS
+            description: AWSConfigSpec defines the desired state of AWSConfig
             properties:
               name:
                 type: string
@@ -69,7 +69,7 @@ spec:
             - region
             type: object
           status:
-            description: AWSStatus defines the observed state of AWS
+            description: AWSConfigStatus defines the observed state of AWSConfig
             properties:
               eksCluster:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

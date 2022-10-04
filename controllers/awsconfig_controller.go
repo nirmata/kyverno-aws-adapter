@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -30,44 +31,43 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/google/go-cmp/cmp"
-	kyvernoadapterv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
+	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
-// AWSReconciler reconciles a AWS object
-type AWSReconciler struct {
+// AWSConfigReconciler reconciles a AWSConfig object
+type AWSConfigReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kyverno-adapter.nirmata.io,resources=aws,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kyverno-adapter.nirmata.io,resources=aws/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kyverno-adapter.nirmata.io,resources=aws/finalizers,verbs=update
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the AWS object against the actual cluster state, and then
+// the AWSConfig object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
 	l.Info("Reconciling", "req", req)
 
-	objOld := &kyvernoadapterv1alpha1.AWS{}
+	objOld := &securityv1alpha1.AWSConfig{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
 	if err != nil {
 		l.Error(err, "error occurred while retrieving awsconfig")
 		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 	objNew := objOld.DeepCopy()
-	objNew.Status.EKSCluster = &kyvernoadapterv1alpha1.EKSCluster{}
-	// objNew.Status.EKSCluster.Compute = &kyvernoadapterv1alpha1.EKSCompute{}
-	// objNew.Status.EKSCluster.Networking = &kyvernoadapterv1alpha1.EKSNetworking{}
-	// objNew.Status.EKSCluster.Logging = &kyvernoadapterv1alpha1.EKSLogging{}
+	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
+	// objNew.Status.EKSCluster.Compute = &securityv1alpha1.EKSCompute{}
+	// objNew.Status.EKSCluster.Networking = &securityv1alpha1.EKSNetworking{}
+	// objNew.Status.EKSCluster.Logging = &securityv1alpha1.EKSLogging{}
 
 	l.Info("Loading AWS SDK config")
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-1"))
@@ -97,15 +97,15 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 
 	if x, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
-		tmpEncConf := []*kyvernoadapterv1alpha1.EKSEncryptionConfig{}
+		tmpEncConf := []*securityv1alpha1.EKSEncryptionConfig{}
 		for _, encConf := range x.Cluster.EncryptionConfig {
-			tmpEncConf = append(tmpEncConf, &kyvernoadapterv1alpha1.EKSEncryptionConfig{
+			tmpEncConf = append(tmpEncConf, &securityv1alpha1.EKSEncryptionConfig{
 				KeyARN:    encConf.Provider.KeyArn,
 				Resources: encConf.Resources,
 			})
 		}
 
-		objNew.Status.EKSCluster = &kyvernoadapterv1alpha1.EKSCluster{
+		objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{
 			CreatedAt:         x.Cluster.CreatedAt.String(),
 			Endpoint:          x.Cluster.Endpoint,
 			ID:                x.Cluster.Id,
@@ -118,8 +118,8 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 			Arn:               x.Cluster.Arn,
 			Certificate:       x.Cluster.CertificateAuthority.Data,
 			EncryptionConfig:  tmpEncConf,
-			Networking: &kyvernoadapterv1alpha1.EKSNetworking{
-				VPC: &kyvernoadapterv1alpha1.EKSVpcConfig{
+			Networking: &securityv1alpha1.EKSNetworking{
+				VPC: &securityv1alpha1.EKSVpcConfig{
 					ClusterSecurityGroupID: x.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
 					EndpointPrivateAccess:  x.Cluster.ResourcesVpcConfig.EndpointPrivateAccess,
 					EndpointPublicAccess:   x.Cluster.ResourcesVpcConfig.EndpointPublicAccess,
@@ -132,8 +132,8 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 				ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
 				IPFamily:        string(x.Cluster.KubernetesNetworkConfig.IpFamily),
 			},
-			Compute: &kyvernoadapterv1alpha1.EKSCompute{},
-			Logging: &kyvernoadapterv1alpha1.EKSLogging{},
+			Compute: &securityv1alpha1.EKSCompute{},
+			Logging: &securityv1alpha1.EKSLogging{},
 			Tags:    x.Cluster.Tags,
 		}
 
@@ -166,19 +166,19 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	if x, err := svc.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		for _, v := range x.Nodegroups {
 			if y, err := svc.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
-				objNew.Status.EKSCluster.Compute.NodeGroups = []*kyvernoadapterv1alpha1.EKSNodeGroup{}
-				launchTemplate := &kyvernoadapterv1alpha1.EC2LaunchTemplate{}
+				objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
+				launchTemplate := &securityv1alpha1.EC2LaunchTemplate{}
 				if y.Nodegroup.LaunchTemplate != nil {
-					launchTemplate = &kyvernoadapterv1alpha1.EC2LaunchTemplate{
+					launchTemplate = &securityv1alpha1.EC2LaunchTemplate{
 						ID:      y.Nodegroup.LaunchTemplate.Id,
 						Name:    y.Nodegroup.LaunchTemplate.Name,
 						Version: y.Nodegroup.LaunchTemplate.Version,
 					}
 				}
 
-				healthIssues := []*kyvernoadapterv1alpha1.EKSNodeGroupHealthIssue{}
+				healthIssues := []*securityv1alpha1.EKSNodeGroupHealthIssue{}
 				for _, issue := range y.Nodegroup.Health.Issues {
-					healthIssues = append(healthIssues, &kyvernoadapterv1alpha1.EKSNodeGroupHealthIssue{
+					healthIssues = append(healthIssues, &securityv1alpha1.EKSNodeGroupHealthIssue{
 						Code:        string(issue.Code),
 						Message:     issue.Message,
 						ResourceIDs: issue.ResourceIds,
@@ -191,23 +191,23 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 					autoScalingGroups = append(autoScalingGroups, *asg.Name)
 				}
 
-				taints := []*kyvernoadapterv1alpha1.EKSNodeGroupTaint{}
+				taints := []*securityv1alpha1.EKSNodeGroupTaint{}
 				for _, taint := range y.Nodegroup.Taints {
-					taints = append(taints, &kyvernoadapterv1alpha1.EKSNodeGroupTaint{
+					taints = append(taints, &securityv1alpha1.EKSNodeGroupTaint{
 						Effect: string(taint.Effect),
 						Key:    taint.Key,
 						Value:  taint.Value,
 					})
 				}
 
-				remoteAccessConfig := &kyvernoadapterv1alpha1.EKSNodeGroupRemoteAccessConfig{}
+				remoteAccessConfig := &securityv1alpha1.EKSNodeGroupRemoteAccessConfig{}
 				if y.Nodegroup.RemoteAccess != nil {
 					remoteAccessConfig.Ec2SshKey = y.Nodegroup.RemoteAccess.Ec2SshKey
 					remoteAccessConfig.SourceSecurityGroups = y.Nodegroup.RemoteAccess.SourceSecurityGroups
 				}
-				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &kyvernoadapterv1alpha1.EKSNodeGroup{
+				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
 					Name: v,
-					ScalingConfig: &kyvernoadapterv1alpha1.EKSNodeGroupScalingConfig{
+					ScalingConfig: &securityv1alpha1.EKSNodeGroupScalingConfig{
 						DesiredSize: y.Nodegroup.ScalingConfig.DesiredSize,
 						MinSize:     y.Nodegroup.ScalingConfig.MinSize,
 						MaxSize:     y.Nodegroup.ScalingConfig.MaxSize,
@@ -224,7 +224,7 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 					NodegroupArn:       y.Nodegroup.NodegroupArn,
 					NodeRole:           y.Nodegroup.NodeRole,
 					RemoteAccessConfig: remoteAccessConfig,
-					Resources: &kyvernoadapterv1alpha1.EKSNodeGroupResources{
+					Resources: &securityv1alpha1.EKSNodeGroupResources{
 						RemoteAccessSecurityGroup: y.Nodegroup.Resources.RemoteAccessSecurityGroup,
 						AutoScalingGroups:         autoScalingGroups,
 					},
@@ -232,7 +232,7 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 					Tags:    y.Nodegroup.Tags,
 					Taints:  taints,
 					Labels:  y.Nodegroup.Labels,
-					UpdateConfig: &kyvernoadapterv1alpha1.EKSNodeGroupUpdateConfig{
+					UpdateConfig: &securityv1alpha1.EKSNodeGroupUpdateConfig{
 						MaxUnavailable:           y.Nodegroup.UpdateConfig.MaxUnavailable,
 						MaxUnavailablePercentage: y.Nodegroup.UpdateConfig.MaxUnavailablePercentage,
 					},
@@ -269,8 +269,8 @@ func (r *AWSReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *AWSReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *AWSConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&kyvernoadapterv1alpha1.AWS{}).
+		For(&securityv1alpha1.AWSConfig{}).
 		Complete(r)
 }

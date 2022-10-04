@@ -8,14 +8,13 @@ metadata:
     app.kubernetes.io/component: manager
     app.kubernetes.io/created-by: kyverno-aws-adapter
     app.kubernetes.io/part-of: kyverno-aws-adapter
-    app.kubernetes.io/managed-by: kustomize
-  name: system
+  name: kyverno-aws-adapter
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
-  namespace: system
+  namespace: kyverno-aws-adapter
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: deployment
@@ -70,7 +69,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: controller:latest
+        image: ghcr.io/nirmata/kyverno-aws-adapter:v1alpha1
         name: manager
         securityContext:
           allowPrivilegeEscalation: false

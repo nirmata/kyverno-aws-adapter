@@ -1,43 +1,65 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kyverno-adapter.nirmata.io:aws:awscrd
+  name: coordination.k8s.io:leases:kyverno-aws-adapter
 rules:
-- apiGroups: ["kyverno-adapter.nirmata.io"]
-  resources: ["aws"]
-  verbs: ["get","list","create","update","watch","delete","patch"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kyverno-adapter.nirmata.io:aws:awsstatus
+  name: security.nirmata.io:awsconfigs:spec
 rules:
-- apiGroups: ["kyverno-adapter.nirmata.io"]
-  resources: ["aws/status"]
-  verbs: ["get","list","create","update","watch","delete","patch"]
+- apiGroups: ["security.nirmata.io"]
+  resources: ["awsconfigs"]
+  verbs: ["get","list","update","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security.nirmata.io:awsconfigs:status
+rules:
+- apiGroups: ["security.nirmata.io"]
+  resources: ["awsconfigs/status"]
+  verbs: ["get","list","update","watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: adapter-clusterrolebinding-awscrd
+  name: adapter-clusterrolebinding-spec
 subjects:
 - kind: ServiceAccount
   name: iam-sa
-  namespace: default
+  namespace: system
 roleRef:
   kind: ClusterRole
-  name: kyverno-adapter.nirmata.io:aws:awscrd
+  name: security.nirmata.io:awsconfigs:spec
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: adapter-clusterrolebinding-awsstatus
+  name: adapter-clusterrolebinding-status
 subjects:
 - kind: ServiceAccount
   name: iam-sa
-  namespace: default
+  namespace: system
 roleRef:
   kind: ClusterRole
-  name: kyverno-adapter.nirmata.io:aws:awsstatus
+  name: security.nirmata.io:awsconfigs:status
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: adapter-clusterrolebinding-kyverno-aws-adapter
+subjects:
+- kind: ServiceAccount
+  name: iam-sa
+  namespace: system
+roleRef:
+  kind: ClusterRole
+  name: coordination.k8s.io:leases:kyverno-aws-adapter
   apiGroup: rbac.authorization.k8s.io

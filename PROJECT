@@ -9,8 +9,8 @@ resources:
     namespaced: true
   controller: true
   domain: nirmata.io
-  group: kyverno-adapter
-  kind: AWS
+  group: security
+  kind: AWSConfig
   path: github.com/nirmata/kyverno-aws-adapter/api/v1alpha1
   version: v1alpha1
 version: "3"

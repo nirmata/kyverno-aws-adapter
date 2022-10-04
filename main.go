@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kyvernoadapterv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
+	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 	"github.com/nirmata/kyverno-aws-adapter/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -45,7 +45,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(kyvernoadapterv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(securityv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -95,11 +95,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.AWSReconciler{
+	if err = (&controllers.AWSConfigReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWS")
+		setupLog.Error(err, "unable to create controller", "controller", "AWSConfig")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

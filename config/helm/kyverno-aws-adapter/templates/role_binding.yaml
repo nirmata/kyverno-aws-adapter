@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: kyverno-aws-adapter
     app.kubernetes.io/part-of: kyverno-aws-adapter
-    app.kubernetes.io/managed-by: kustomize
   name: awsconfig-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -15,5 +14,5 @@ roleRef:
   name: awsconfig-manager-role
 subjects:
 - kind: ServiceAccount
-  name: controller-manager
-  namespace: system
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+  namespace: {{ .Values.namespace }}

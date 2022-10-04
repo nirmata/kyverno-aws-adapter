@@ -3,12 +3,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: manager-role
+  name: awsconfig-manager-role
 rules:
 - apiGroups:
-  - kyverno-adapter.nirmata.io
+  - security.nirmata.io
   resources:
-  - aws
+  - awsconfigs
   verbs:
   - create
   - delete
@@ -18,15 +18,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kyverno-adapter.nirmata.io
+  - security.nirmata.io
   resources:
-  - aws/finalizers
+  - awsconfigs/finalizers
   verbs:
   - update
 - apiGroups:
-  - kyverno-adapter.nirmata.io
+  - security.nirmata.io
   resources:
-  - aws/status
+  - awsconfigs/status
   verbs:
   - get
   - patch
