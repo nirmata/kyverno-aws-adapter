@@ -80,7 +80,7 @@ Currently supported values for the Helm chart are as follows:
 This adapter utilizes the IAM Role ARN associated with any policy that has the following permissions for the EKS cluster:
 
 | Permission |
----
+| --- |
 | ListAddons |
 | ListClusters |
 | ListFargateProfiles |
