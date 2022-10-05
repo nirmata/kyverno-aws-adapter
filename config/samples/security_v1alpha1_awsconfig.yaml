@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/part-of: kyverno-aws-adapter
     app.kubernetes.io/created-by: kyverno-aws-adapter
   name: eks-status
+  # namespace: kyverno-aws-adapter
 spec:
   name: eks-test
   region: us-west-1

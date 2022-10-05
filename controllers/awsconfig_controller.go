@@ -61,13 +61,10 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
 	if err != nil {
 		l.Error(err, "error occurred while retrieving awsconfig")
-		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+		return ctrl.Result{}, nil
 	}
 	objNew := objOld.DeepCopy()
 	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
-	// objNew.Status.EKSCluster.Compute = &securityv1alpha1.EKSCompute{}
-	// objNew.Status.EKSCluster.Networking = &securityv1alpha1.EKSNetworking{}
-	// objNew.Status.EKSCluster.Logging = &securityv1alpha1.EKSLogging{}
 
 	l.Info("Loading AWS SDK config")
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-1"))

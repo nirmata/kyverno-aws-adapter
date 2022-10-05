@@ -2,46 +2,33 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-namespace: kyverno-aws-adapter
-roleArn: "put_your_aws_iam_role_arn_here"
-enableAuthProxy: false
-enableMonitor: false
-replicaCount: 1
+namespace:
+  # create namespace
+  create: true
+  # name of the namespace to install kyverno aws adapter, defaults to 'nirmata'
+  name: nirmata
+
+# REQUIRED To access AWS API
+roleArn:
+awsCredentials:
+  # accessKeyID:
+  # secretAccessKey:
+
 syncPeriod: 30
-enableAuthProxy: false
 eksCluster:
   name: eks-test
   region: us-west-1
-dockerconfigjson: "put_your_dockerconfigjson-here"
 
+# REQUIRED To pull the private image
+registryConfig:
+  username:
+  password:
 
 image:
   repository: ghcr.io/nirmata/kyverno-aws-adapter
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v1alpha1"
+  tag: v0.1.0
 
 nameOverride: ""
 fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: "aws-serviceaccount"
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext:
-  runAsNonRoot: true
-  privileged: false
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-  seccompProfile:
-    type: RuntimeDefault
-  # runAsUser: 1000

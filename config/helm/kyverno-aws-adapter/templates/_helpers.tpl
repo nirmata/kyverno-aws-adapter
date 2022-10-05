@@ -51,20 +51,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Generate the dockerconfigjson value
 */}}
-{{- define "kyverno-aws-adapter.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "kyverno-aws-adapter.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
-
-{{- define "kyverno-aws-adapter.securityContext" -}}
-{{- if semverCompare "<1.19" .Capabilities.KubeVersion.Version }}
-{{ toYaml (omit .Values.securityContext "seccompProfile") }}
-{{- else }}
-{{ toYaml .Values.securityContext }}
-{{- end }}
+{{- define "kyverno-aws-adapter.dockerconfigjson" -}}
+{{- $user_pwd_hashed := printf "%s:%s" .Values.registryConfig.username .Values.registryConfig.password | b64enc }}
+{{- printf "{\"auths\":{\"ghcr.io\":{\"auth\":\"%s\"}}}" $user_pwd_hashed | b64enc }}
 {{- end }}

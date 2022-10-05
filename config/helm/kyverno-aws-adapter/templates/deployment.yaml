@@ -1,20 +1,8 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    app.kubernetes.io/name: namespace
-    app.kubernetes.io/instance: {{ .Values.namespace }}
-    app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
-  name: {{ .Values.namespace }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kyverno-aws-adapter.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace.name }}
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: deployment
@@ -26,7 +14,7 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   template:
     metadata:
       annotations:
@@ -42,14 +30,26 @@ spec:
       containers:
       - command:
         - /manager
-        args:
-        - --leader-elect
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
-        {{- if .Values.securityContext }}
-        securityContext: {{ include "kyverno-aws-adapter.securityContext" . | nindent 10 }}
+        env:
+        {{- if .Values.awsCredentials }}
+        - name: AWS_ACCESS_KEY_ID
+          value: {{ .Values.awsCredentials.accessKeyID }}
+        - name: AWS_SECRET_ACCESS_KEY
+          value: {{ .Values.awsCredentials.secretAccessKey }}
         {{- end }}
+        securityContext:
+          runAsNonRoot: true
+          privileged: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         livenessProbe:
           httpGet:
             path: /healthz
@@ -71,5 +71,5 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-      serviceAccountName: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+      serviceAccountName: kyverno-aws-adapter-sa
       terminationGracePeriodSeconds: 10
