@@ -34,11 +34,14 @@ spec:
     - jsonPath: .status.eksCluster.platformVersion
       name: Platform Version
       type: string
-    - jsonPath: .status.eksCluster.endpoint
-      name: Endpoint
-      type: string
-    - jsonPath: .status.eksCluster.arn
-      name: Role Arn
+    - jsonPath: .status.lastUpdatedTimestamp
+      name: Last Updated
+      type: date
+    - jsonPath: .status.lastPollInfo.timestamp
+      name: Last Polled
+      type: date
+    - jsonPath: .status.lastPollInfo.status
+      name: Last Polled Status
       type: string
     name: v1alpha1
     schema:
@@ -72,9 +75,6 @@ spec:
             description: AWSConfigStatus defines the observed state of AWSConfig
             properties:
               eksCluster:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
                 properties:
                   addons:
                     items:
@@ -288,16 +288,36 @@ spec:
                       type: string
                     type: object
                 required:
-                - compute
-                - encryptionConfig
-                - logging
                 - name
-                - networking
                 - region
                 - status
                 type: object
+              lastPollInfo:
+                properties:
+                  failure:
+                    properties:
+                      error:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                    - error
+                    - message
+                    type: object
+                  status:
+                    type: string
+                  timestamp:
+                    format: date-time
+                    type: string
+                type: object
+              lastUpdatedTimestamp:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                format: date-time
+                type: string
             required:
-            - eksCluster
+            - lastPollInfo
             type: object
         type: object
     served: true

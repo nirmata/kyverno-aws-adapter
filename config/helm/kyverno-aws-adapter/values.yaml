@@ -10,11 +10,10 @@ namespace:
 
 # REQUIRED To access AWS API
 roleArn:
-awsCredentials:
-  # accessKeyID:
-  # secretAccessKey:
 
-syncPeriod: 30
+# If not defined, defaults to 30 (seconds)
+pollInterval: 15
+
 eksCluster:
   name: eks-test
   region: us-west-1

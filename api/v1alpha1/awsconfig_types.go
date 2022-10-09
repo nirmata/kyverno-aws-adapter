@@ -23,6 +23,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type PollStatus string
+
 // AWSConfigSpec defines the desired state of AWSConfig
 type AWSConfigSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -45,10 +47,10 @@ type EKSCluster struct {
 	PlatformVersion         *string                `json:"platformVersion,omitempty"`
 	RoleArn                 *string                `json:"roleArn,omitempty"`
 	CreatedAt               string                 `json:"createdAt,omitempty"`
-	EncryptionConfig        []*EKSEncryptionConfig `json:"encryptionConfig"`
-	Compute                 *EKSCompute            `json:"compute"`
-	Networking              *EKSNetworking         `json:"networking"`
-	Logging                 *EKSLogging            `json:"logging"`
+	EncryptionConfig        []*EKSEncryptionConfig `json:"encryptionConfig,omitempty"`
+	Compute                 *EKSCompute            `json:"compute,omitempty"`
+	Networking              *EKSNetworking         `json:"networking,omitempty"`
+	Logging                 *EKSLogging            `json:"logging,omitempty"`
 	Addons                  []string               `json:"addons,omitempty"`
 	IdentityProviderConfigs []*string              `json:"identityProviderConfigs,omitempty"`
 	Tags                    map[string]string      `json:"tags,omitempty"`
@@ -151,11 +153,23 @@ type EKSLogging struct {
 	Scheduler         *bool `json:"scheduler,omitempty"`
 }
 
+type PollFailure struct {
+	Message string `json:"message"`
+	Error   string `json:"error"`
+}
+type LastPollInfo struct {
+	Timestamp *metav1.Time `json:"timestamp,omitempty"`
+	Status    PollStatus   `json:"status,omitempty"`
+	Failure   *PollFailure `json:"failure,omitempty"`
+}
+
 // AWSConfigStatus defines the observed state of AWSConfig
 type AWSConfigStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	EKSCluster *EKSCluster `json:"eksCluster"`
+	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
+	LastPollInfo         LastPollInfo `json:"lastPollInfo"`
+	EKSCluster           *EKSCluster  `json:"eksCluster,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -166,8 +180,9 @@ type AWSConfigStatus struct {
 //+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.eksCluster.status`
 //+kubebuilder:printcolumn:name="Kubernetes Version",type=string,JSONPath=`.status.eksCluster.kubernetesVersion`
 //+kubebuilder:printcolumn:name="Platform Version",type=string,JSONPath=`.status.eksCluster.platformVersion`
-//+kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.status.eksCluster.endpoint`
-//+kubebuilder:printcolumn:name="Role Arn",type=string,JSONPath=`.status.eksCluster.arn`
+//+kubebuilder:printcolumn:name="Last Updated",type=date,JSONPath=`.status.lastUpdatedTimestamp`
+//+kubebuilder:printcolumn:name="Last Polled",type=date,JSONPath=`.status.lastPollInfo.timestamp`
+//+kubebuilder:printcolumn:name="Last Polled Status",type=string,JSONPath=`.status.lastPollInfo.status`
 
 // AWSConfig is the Schema for the awsconfigs API
 type AWSConfig struct {

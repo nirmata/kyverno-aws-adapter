@@ -8,21 +8,15 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Running on the cluster
-1. Install the `AWSConfig` CRD:
-
-```sh
-make install
-```
-
-2. Install the Helm chart after making any necessary changes to `config/helm/kyverno-aws-adapter/values.yaml`
-	
-```sh
-helm install kyverno-aws-adapter config/helm/kyverno-aws-adapter
-```
-3. Check the `status` field of the `eks-status` custom resource in the required namespace. If the namespace is `kyverno-aws-adapter`, then:
-```sh
-kubectl get awsconfig eks-status -n kyverno-aws-adapter -o yaml 
-```
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+2. Install the Helm chart after making any necessary changes to `config/helm/kyverno-aws-adapter/values.yaml`	
+   ```sh
+   helm install kyverno-aws-adapter config/helm/kyverno-aws-adapter
+   ```
+3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `nirmata`, then:
+   ```sh
+   kubectl get awsconfig eks-test-config -n nirmata -o yaml 
+   ```
 
 ## Modifying Source Code
 
@@ -63,21 +57,17 @@ Currently supported values for the Helm chart are as follows:
 | Value | Description |
 -- | ---
 | `namespace` | Namespace for installing the controller and CRD |
+| `eksCluster` | Configuration for EKS cluster's `name` and `region` |
+| `registryConfig` | ghcr.io username and password configuration for the image secret |
+| `pollInterval` | Interval for controller reconciliation |
+| `image` | Configuration for image `name`, `tag` and `pullPolicy` |
+| `roleArn` | IAM Role ARN with required permissions for the EKS cluster |
 | `nameOverride` | Override the chart name |
 | `fullnameOverride` | Override the entire generated name |
-| `eksCluster` | Configuration for EKS cluster's `name` and `region` |
-| `dockerconfigjson` | Dockerconfigjson for the image secret |
-| `replicaCount` | Number of replicas for the controller |
-| `syncPeriod` | Interval for controller reconciliation |
-| `image` | Configuration for image `name`, `tag` and `pullPolicy` |
-| `serviceAccount` | Configuration for `serviceAccount` creation and naming|
-| `securityContext` | `securityContext` for the containers in Pods |
-| `podSecurityContext` | `securityContext` for the Pods |
-| `roleArn` | IAM Role ARN with required permissions for the EKS cluster |
 
 
 ## IAM Role for Service Account
-This adapter utilizes the IAM Role ARN associated with any policy that has the following permissions for the EKS cluster:
+This adapter utilizes the ARN of a user-defined IAM Role associated with any policy that has `Full: List, Read` permissions for the EKS service, including the following:
 
 | Permission |
 | --- |
@@ -97,7 +87,7 @@ This adapter utilizes the IAM Role ARN associated with any policy that has the f
 | DescribeUpdate |
 | ListTagsForResource |
 
-You can specify the Role ARN in the `roleArn` field within the Helm chart's `values.yaml` file.
+You can specify the Role's ARN in the `roleArn` field inside the Helm chart's `values.yaml` file.
 
 Please ensure that the trust relationship policy for your IAM role resembles the following format:
 ```json

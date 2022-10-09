@@ -68,7 +68,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	syncInterval := time.Duration(syncPeriod) * time.Second
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -87,8 +86,6 @@ func main() {
 		// if you are doing or is intended to do any operation such as perform cleanups
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
-
-		SyncPeriod: &syncInterval,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -96,8 +93,9 @@ func main() {
 	}
 
 	if err = (&controllers.AWSConfigReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
+		RequeueInterval: time.Duration(syncPeriod) * time.Second,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSConfig")
 		os.Exit(1)

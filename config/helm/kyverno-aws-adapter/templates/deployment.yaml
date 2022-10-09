@@ -22,9 +22,6 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
-      {{- with .Values.podSecurityContext }}
-      securityContext: {{ tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
       imagePullSecrets:
       - name: {{ include "kyverno-aws-adapter.fullname" . }}
       containers:
@@ -33,12 +30,9 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
-        env:
-        {{- if .Values.awsCredentials }}
-        - name: AWS_ACCESS_KEY_ID
-          value: {{ .Values.awsCredentials.accessKeyID }}
-        - name: AWS_SECRET_ACCESS_KEY
-          value: {{ .Values.awsCredentials.secretAccessKey }}
+        {{- if .Values.pollInterval }}
+        args:
+        - --sync-period={{ .Values.pollInterval }}
         {{- end }}
         securityContext:
           runAsNonRoot: true

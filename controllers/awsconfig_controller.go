@@ -22,7 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -34,10 +36,13 @@ import (
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
+var PollFailure, PollSuccess securityv1alpha1.PollStatus = "failure", "success"
+
 // AWSConfigReconciler reconciles a AWSConfig object
 type AWSConfigReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme          *runtime.Scheme
+	RequeueInterval time.Duration
 }
 
 //+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -55,7 +60,6 @@ type AWSConfigReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
-	l.Info("Reconciling", "req", req)
 
 	objOld := &securityv1alpha1.AWSConfig{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
@@ -63,17 +67,25 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		l.Error(err, "error occurred while retrieving awsconfig")
 		return ctrl.Result{}, nil
 	}
-	objNew := objOld.DeepCopy()
-	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
+
+	if objOld.Status != (securityv1alpha1.AWSConfigStatus{}) {
+		if metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
+			return ctrl.Result{}, nil
+		}
+	}
+	l.Info("Reconciling", "req", req)
 
 	l.Info("Loading AWS SDK config")
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-1"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*objOld.Spec.Region))
 	if err != nil {
 		l.Error(err, "error occurred while loading aws sdk config")
-		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
 	}
 	l.Info("AWS SDK config loaded successfully")
 	svc := eks.NewFromConfig(cfg)
+
+	objNew := objOld.DeepCopy()
+	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
 
 	// TODO: list all clusters instead of going through just first 100
 	clusterFound := false
@@ -84,13 +96,21 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 					clusterFound = true
 					break
 				}
+			} else {
+				objOld.Status.LastPollInfo.Status = PollFailure
+				l.Error(err, "error occurred while fetching cluster details")
+				return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching cluster details", err, &l, time.Now())
 			}
 		}
+	} else {
+		objOld.Status.LastPollInfo.Status = PollFailure
+		l.Error(err, "error occurred while fetching cluster details")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching cluster details", err, &l, time.Now())
 	}
 
 	if !clusterFound {
 		l.Error(fmt.Errorf("cluster not found"), fmt.Sprintf("could not find cluster '%s' in the given region '%s'", *objOld.Spec.Name, *objOld.Spec.Region))
-		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+		return r.updateLastPollStatusFailure(ctx, objOld, fmt.Sprintf("could not find cluster '%s' in the given region '%s'", *objOld.Spec.Name, *objOld.Spec.Region), fmt.Errorf("cluster not found"), &l, time.Now())
 	}
 
 	if x, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
@@ -152,12 +172,14 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	} else {
 		l.Error(err, "error fetching cluster details")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error fetching cluster details", err, &l, time.Now())
 	}
 
 	if x, err := svc.ListFargateProfiles(context.TODO(), &eks.ListFargateProfilesInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Compute.FargateProfiles = x.FargateProfileNames
 	} else {
 		l.Error(err, "error listing fargate profiles")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error listing fargate profiles", err, &l, time.Now())
 	}
 
 	if x, err := svc.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
@@ -236,33 +258,43 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				})
 			} else {
 				l.Error(err, fmt.Sprintf("error describing nodegroup '%s'", v))
+				return r.updateLastPollStatusFailure(ctx, objOld, fmt.Sprintf("error describing nodegroup '%s'", v), err, &l, time.Now())
 			}
 		}
 	} else {
-		l.Error(err, "error listing nodegroups")
+		l.Error(err, "error listing nodegroups", *objOld.Spec.Name, *objOld.Spec.Region)
+		return r.updateLastPollStatusFailure(ctx, objOld, "error listing nodegroups", err, &l, time.Now())
 	}
 
 	if x, err := svc.ListAddons(context.TODO(), &eks.ListAddonsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Addons = x.Addons
 	} else {
 		l.Error(err, "error listing addons")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error listing addons", err, &l, time.Now())
 	}
 
 	if x, err := svc.ListIdentityProviderConfigs(context.TODO(), &eks.ListIdentityProviderConfigsInput{ClusterName: objOld.Spec.Name}); err == nil {
+		objNew.Status.EKSCluster.IdentityProviderConfigs = []*string{}
 		for _, v := range x.IdentityProviderConfigs {
-			objNew.Status.EKSCluster.IdentityProviderConfigs = []*string{}
 			objNew.Status.EKSCluster.IdentityProviderConfigs = append(objNew.Status.EKSCluster.IdentityProviderConfigs, v.Name)
 		}
 	} else {
 		l.Error(err, "error listing identity provider configs")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error listing identity provider configs", err, &l, time.Now())
 	}
 
-	if !cmp.Equal(objNew.Status, objOld.Status) {
+	currentPollTimestamp := time.Now()
+	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
+		Timestamp: &metav1.Time{currentPollTimestamp},
+		Status:    PollSuccess,
+	}
+	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
+		objNew.Status.LastUpdatedTimestamp = &metav1.Time{currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
 			l.Error(err, "error updating status")
 		}
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -270,4 +302,20 @@ func (r *AWSConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&securityv1alpha1.AWSConfig{}).
 		Complete(r)
+}
+
+func (r *AWSConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
+	// if objOld.Status.LastPollInfo != nil {
+	objOld.Status.LastPollInfo.Status = PollFailure
+	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{currentPollTimestamp}
+	objOld.Status.LastPollInfo.Failure = &securityv1alpha1.PollFailure{
+		Message: msg,
+		Error:   err.Error(),
+	}
+
+	if err := r.Status().Update(ctx, objOld); err != nil {
+		l.Error(err, "error updating last poll's status failure")
+	}
+
+	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
