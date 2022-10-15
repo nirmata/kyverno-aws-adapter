@@ -34,6 +34,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - security.nirmata.io
+  resources:
+  - awsconfigs/finalizers
+  verbs:
+  - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

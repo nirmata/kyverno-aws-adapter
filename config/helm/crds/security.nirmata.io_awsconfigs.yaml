@@ -75,6 +75,7 @@ spec:
             description: AWSConfigStatus defines the observed state of AWSConfig
             properties:
               eksCluster:
+                description: Contains the EKS cluster's details
                 properties:
                   addons:
                     items:
@@ -85,6 +86,8 @@ spec:
                   certificate:
                     type: string
                   compute:
+                    description: Contains node groups and fargate profiles of the
+                      EKS cluster
                     properties:
                       fargateProfiles:
                         items:
@@ -92,6 +95,7 @@ spec:
                         type: array
                       nodeGroups:
                         items:
+                          description: Contains info of the EKS cluster's node group
                           properties:
                             amiReleaseVersion:
                               type: string
@@ -106,6 +110,8 @@ spec:
                               type: integer
                             healthIssues:
                               items:
+                                description: Contains info of any health issue in
+                                  the EKS cluster's node group
                                 properties:
                                   code:
                                     type: string
@@ -126,6 +132,8 @@ spec:
                                 type: string
                               type: object
                             launchTemplate:
+                              description: Contains launch template info the EKS cluster's
+                                node group
                               properties:
                                 id:
                                   type: string
@@ -141,6 +149,7 @@ spec:
                             nodeRole:
                               type: string
                             remoteAccessConfig:
+                              description: "8"
                               properties:
                                 ec2SSHKey:
                                   type: string
@@ -150,6 +159,8 @@ spec:
                                   type: array
                               type: object
                             resources:
+                              description: Contains info of ASG and remote access
+                                SG for node group
                               properties:
                                 autoScalingGroups:
                                   items:
@@ -159,6 +170,8 @@ spec:
                                   type: string
                               type: object
                             scalingConfig:
+                              description: Contains scaling configuration of  the
+                                EKS cluster's node group
                               properties:
                                 desiredSize:
                                   format: int32
@@ -182,6 +195,8 @@ spec:
                               type: object
                             taints:
                               items:
+                                description: Contains info of taints in the EKS cluster's
+                                  node group
                                 properties:
                                   effect:
                                     type: string
@@ -192,6 +207,8 @@ spec:
                                 type: object
                               type: array
                             updateConfig:
+                              description: Contains number/percentage of node groups
+                                that can be updated in parallel
                               properties:
                                 maxUnavailable:
                                   format: int32
@@ -207,6 +224,7 @@ spec:
                     type: string
                   encryptionConfig:
                     items:
+                      description: Contains encryption configuration of the EKS cluster
                       properties:
                         keyARN:
                           type: string
@@ -227,6 +245,7 @@ spec:
                   kubernetesVersion:
                     type: string
                   logging:
+                    description: Contains info of which logs are enabled
                     properties:
                       apiServer:
                         type: boolean
@@ -242,6 +261,7 @@ spec:
                   name:
                     type: string
                   networking:
+                    description: Contains networking configuration of the EKS cluster
                     properties:
                       ipFamily:
                         type: string
@@ -250,6 +270,7 @@ spec:
                       serviceIPv6CIDR:
                         type: string
                       vpc:
+                        description: Contains VPC configuration of the EKS cluster
                         properties:
                           clusterSecurityGroupID:
                             type: string
@@ -293,8 +314,11 @@ spec:
                 - status
                 type: object
               lastPollInfo:
+                description: Contains Timestamp, Status and Failure info of last poll
                 properties:
                   failure:
+                    description: Contains the Error and relevant Message if got Failure
+                      in last poll
                     properties:
                       error:
                         type: string

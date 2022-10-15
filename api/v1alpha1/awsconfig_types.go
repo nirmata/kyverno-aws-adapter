@@ -34,6 +34,7 @@ type AWSConfigSpec struct {
 	Region *string `json:"region"`
 }
 
+// Contains the EKS cluster's details
 type EKSCluster struct {
 	ID                      *string                `json:"id,omitempty"`
 	KubernetesVersion       *string                `json:"kubernetesVersion,omitempty"`
@@ -56,16 +57,19 @@ type EKSCluster struct {
 	Tags                    map[string]string      `json:"tags,omitempty"`
 }
 
+// Contains encryption configuration of the EKS cluster
 type EKSEncryptionConfig struct {
 	KeyARN    *string  `json:"keyARN,omitempty"`
 	Resources []string `json:"resources,omitempty"`
 }
 
+// Contains node groups and fargate profiles of the EKS cluster
 type EKSCompute struct {
 	NodeGroups      []*EKSNodeGroup `json:"nodeGroups,omitempty"`
 	FargateProfiles []string        `json:"fargateProfiles,omitempty"`
 }
 
+// Contains info of the EKS cluster's node group
 type EKSNodeGroup struct {
 	Name               string                          `json:"name,omitempty"`
 	NodegroupArn       *string                         `json:"nodeGroupArn,omitempty"`
@@ -89,45 +93,53 @@ type EKSNodeGroup struct {
 	Tags               map[string]string               `json:"tags,omitempty"`
 }
 
+// Contains number/percentage of node groups that can be updated in parallel
 type EKSNodeGroupUpdateConfig struct {
 	MaxUnavailable           *int32 `json:"maxUnavailable,omitempty"`
 	MaxUnavailablePercentage *int32 `json:"maxUnavailablePercentage,omitempty"`
 }
 
+// Contains info of ASG and remote access SG for node group
 type EKSNodeGroupResources struct {
 	AutoScalingGroups         []string `json:"autoScalingGroups,omitempty"`
 	RemoteAccessSecurityGroup *string  `json:"remoteAccessSecurityGroup,omitempty"`
 }
 
+// Contains info of taints in the EKS cluster's node group
 type EKSNodeGroupTaint struct {
 	Effect string  `json:"effect,omitempty"`
 	Key    *string `json:"key,omitempty"`
 	Value  *string `json:"value,omitempty"`
 }
 
+// 8
 type EKSNodeGroupRemoteAccessConfig struct {
 	Ec2SshKey            *string  `json:"ec2SSHKey,omitempty"`
 	SourceSecurityGroups []string `json:"sourceSecurityGroups,omitempty"`
 }
 
+// Contains info of any health issue in the EKS cluster's node group
 type EKSNodeGroupHealthIssue struct {
 	Code        string   `json:"code,omitempty"`
 	Message     *string  `json:"message,omitempty"`
 	ResourceIDs []string `json:"resourceIDs,omitempty"`
 }
 
+// Contains scaling configuration of  the EKS cluster's node group
 type EKSNodeGroupScalingConfig struct {
 	DesiredSize *int32 `json:"desiredSize,omitempty"`
 	MaxSize     *int32 `json:"maxSize,omitempty"`
 	MinSize     *int32 `json:"minSize,omitempty"`
 }
 
+// Contains launch template info the EKS cluster's node group
 type EC2LaunchTemplate struct {
 	ID      *string `json:"id,omitempty"`
 	Name    *string `json:"name,omitempty"`
 	Version *string `json:"version,omitempty"`
 }
 
+// Contains VPC configuration of the EKS cluster
 type EKSVpcConfig struct {
 	ClusterSecurityGroupID *string  `json:"clusterSecurityGroupID,omitempty"`
 	EndpointPrivateAccess  bool     `json:"endpointPrivateAccess,omitempty"`
@@ -138,6 +150,7 @@ type EKSVpcConfig struct {
 	VpcID                  *string  `json:"vpcID,omitempty"`
 }
 
+// Contains networking configuration of the EKS cluster
 type EKSNetworking struct {
 	VPC             *EKSVpcConfig `json:"vpc,omitempty"`
 	IPFamily        string        `json:"ipFamily,omitempty"`
@@ -145,6 +158,7 @@ type EKSNetworking struct {
 	ServiceIPv6CIDR *string       `json:"serviceIPv6CIDR,omitempty"`
 }
 
+// Contains info of which logs are enabled
 type EKSLogging struct {
 	APIServer         *bool `json:"apiServer,omitempty"`
 	Audit             *bool `json:"audit,omitempty"`
@@ -153,10 +167,13 @@ type EKSLogging struct {
 	Scheduler         *bool `json:"scheduler,omitempty"`
 }
 
+// Contains the Error and relevant Message if got Failure in last poll
 type PollFailure struct {
 	Message string `json:"message"`
 	Error   string `json:"error"`
 }
+
+// Contains Timestamp, Status and Failure info of last poll
 type LastPollInfo struct {
 	Timestamp *metav1.Time `json:"timestamp,omitempty"`
 	Status    PollStatus   `json:"status,omitempty"`
