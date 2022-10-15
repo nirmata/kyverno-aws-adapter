@@ -112,7 +112,7 @@ type EKSNodeGroupTaint struct {
 	Value  *string `json:"value,omitempty"`
 }
 
-// 8
+// Contains remote access configuration of the EKS cluster's node group
 type EKSNodeGroupRemoteAccessConfig struct {
 	Ec2SshKey            *string  `json:"ec2SSHKey,omitempty"`
 	SourceSecurityGroups []string `json:"sourceSecurityGroups,omitempty"`

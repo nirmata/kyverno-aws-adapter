@@ -149,7 +149,8 @@ spec:
                             nodeRole:
                               type: string
                             remoteAccessConfig:
-                              description: "8"
+                              description: Contains remote access configuration of
+                                the EKS cluster's node group
                               properties:
                                 ec2SSHKey:
                                   type: string
