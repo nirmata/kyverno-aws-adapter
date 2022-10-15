@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: namespace
     app.kubernetes.io/instance: {{ .Values.namespace.name }}
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/created-by: nirmata-aws-adapter
+    app.kubernetes.io/part-of: nirmata-aws-adapter
   name: {{ .Values.namespace.name }}
 {{- end }}

@@ -95,7 +95,7 @@ func main() {
 	if err = (&controllers.AWSConfigReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
-		RequeueInterval: time.Duration(syncPeriod) * time.Second,
+		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSConfig")
 		os.Exit(1)

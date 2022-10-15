@@ -4,8 +4,8 @@ metadata:
   labels:
     app.kubernetes.io/name: awsconfig
     app.kubernetes.io/instance: awsconfig-resource
-    app.kubernetes.io/part-of: kyverno-aws-adapter
-    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: nirmata-aws-adapter
+    app.kubernetes.io/created-by: nirmata-aws-adapter
   name: {{ .Values.eksCluster.name }}-config
   namespace: {{ .Values.namespace.name }}
 spec:

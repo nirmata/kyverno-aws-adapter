@@ -6,8 +6,8 @@ metadata:
     app.kubernetes.io/name: clusterrole
     app.kubernetes.io/instance: awsconfig-editor-role
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/created-by: nirmata-aws-adapter
+    app.kubernetes.io/part-of: nirmata-aws-adapter
   name: awsconfig-manager-role
 rules:
 - apiGroups:
@@ -42,8 +42,8 @@ metadata:
     app.kubernetes.io/name: clusterrolebinding
     app.kubernetes.io/instance: awsconfig-manager-rolebinding
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/created-by: nirmata-aws-adapter
+    app.kubernetes.io/part-of: nirmata-aws-adapter
   name: awsconfig-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -51,5 +51,5 @@ roleRef:
   name: awsconfig-manager-role
 subjects:
 - kind: ServiceAccount
-  name: kyverno-aws-adapter-sa
+  name: nirmata-aws-adapter-sa
   namespace: {{ .Values.namespace.name }}
