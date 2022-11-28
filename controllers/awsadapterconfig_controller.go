@@ -38,37 +38,37 @@ import (
 
 var PollFailure, PollSuccess securityv1alpha1.PollStatus = "failure", "success"
 
-// AWSConfigReconciler reconciles a AWSConfig object
-type AWSConfigReconciler struct {
+// AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object
+type AWSAdapterConfigReconciler struct {
 	client.Client
 	Scheme          *runtime.Scheme
 	RequeueInterval time.Duration
 }
 
-//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsconfigs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsadapterconfigs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsadapterconfigs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=security.nirmata.io,resources=awsadapterconfigs/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the AWSConfig object against the actual cluster state, and then
+// the AWSAdapterConfig object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
 
-	objOld := &securityv1alpha1.AWSConfig{}
+	objOld := &securityv1alpha1.AWSAdapterConfig{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
 	if err != nil {
-		l.Error(err, "error occurred while retrieving awsconfig")
+		l.Error(err, "error occurred while retrieving awsadapterconfig")
 		return ctrl.Result{}, nil
 	}
 
-	if objOld.Status != (securityv1alpha1.AWSConfigStatus{}) {
+	if objOld.Status != (securityv1alpha1.AWSAdapterConfigStatus{}) {
 		if metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
 			return ctrl.Result{}, nil
 		}
@@ -298,13 +298,13 @@ func (r *AWSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *AWSConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *AWSAdapterConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&securityv1alpha1.AWSConfig{}).
+		For(&securityv1alpha1.AWSAdapterConfig{}).
 		Complete(r)
 }
 
-func (r *AWSConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
+func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSAdapterConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
 	// if objOld.Status.LastPollInfo != nil {
 	objOld.Status.LastPollInfo.Status = PollFailure
 	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{currentPollTimestamp}

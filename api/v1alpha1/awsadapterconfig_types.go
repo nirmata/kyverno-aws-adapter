@@ -25,8 +25,8 @@ import (
 
 type PollStatus string
 
-// AWSConfigSpec defines the desired state of AWSConfig
-type AWSConfigSpec struct {
+// AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
+type AWSAdapterConfigSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -180,8 +180,8 @@ type LastPollInfo struct {
 	Failure   *PollFailure `json:"failure,omitempty"`
 }
 
-// AWSConfigStatus defines the observed state of AWSConfig
-type AWSConfigStatus struct {
+// AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
+type AWSAdapterConfigStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
@@ -190,6 +190,7 @@ type AWSConfigStatus struct {
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:shortName="awsacfg"
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="Cluster Id",type=string,JSONPath=`.status.id`
 //+kubebuilder:printcolumn:name="Cluster Name",type=string,JSONPath=`.spec.name`
@@ -201,24 +202,24 @@ type AWSConfigStatus struct {
 //+kubebuilder:printcolumn:name="Last Polled",type=date,JSONPath=`.status.lastPollInfo.timestamp`
 //+kubebuilder:printcolumn:name="Last Polled Status",type=string,JSONPath=`.status.lastPollInfo.status`
 
-// AWSConfig is the Schema for the awsconfigs API
-type AWSConfig struct {
+// AWSAdapterConfig is the Schema for the awsadapterconfigs API
+type AWSAdapterConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AWSConfigSpec   `json:"spec,omitempty"`
-	Status AWSConfigStatus `json:"status,omitempty"`
+	Spec   AWSAdapterConfigSpec   `json:"spec,omitempty"`
+	Status AWSAdapterConfigStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// AWSConfigList contains a list of AWSConfig
-type AWSConfigList struct {
+// AWSAdapterConfigList contains a list of AWSAdapterConfig
+type AWSAdapterConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AWSConfig `json:"items"`
+	Items           []AWSAdapterConfig `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AWSConfig{}, &AWSConfigList{})
+	SchemeBuilder.Register(&AWSAdapterConfig{}, &AWSAdapterConfigList{})
 }
