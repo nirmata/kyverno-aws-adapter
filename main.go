@@ -92,12 +92,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.AWSConfigReconciler{
+	if err = (&controllers.AWSAdapterConfigReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
 		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSConfig")
+		setupLog.Error(err, "unable to create controller", "controller", "AWSAdapterConfig")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

@@ -1,7 +1,7 @@
 # nirmata-aws-adapter
 
 ## Description
-Nirmata AWS Adapter is a Kubernetes controller for the `AWSConfig` CRD. As of now, it observes the realtime state of an EKS cluster and reconciles it with the currently stored state, but can be further expanded to other AWS services later on by extending the current API with the help of [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
+Nirmata AWS Adapter is a Kubernetes controller for the `AWSAdapterConfig` CRD. As of now, it observes the realtime state of an EKS cluster and reconciles it with the currently stored state, but can be further expanded to other AWS services later on by extending the current API with the help of [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
 
 ## Installation
 You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
@@ -14,7 +14,7 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
    ```
 3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `nirmata`, then:
    ```sh
-   kubectl get awsconfig eks-test-config -n nirmata -o yaml 
+   kubectl get awsacfg eks-test-config -n nirmata -o yaml 
    ```
 
 ## Helm Values

@@ -5,14 +5,16 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: awsconfigs.security.nirmata.io
+  name: awsadapterconfigs.security.nirmata.io
 spec:
   group: security.nirmata.io
   names:
-    kind: AWSConfig
-    listKind: AWSConfigList
-    plural: awsconfigs
-    singular: awsconfig
+    kind: AWSAdapterConfig
+    listKind: AWSAdapterConfigList
+    plural: awsadapterconfigs
+    shortNames:
+    - awsacfg
+    singular: awsadapterconfig
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -46,7 +48,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AWSConfig is the Schema for the awsconfigs API
+        description: AWSAdapterConfig is the Schema for the awsadapterconfigs API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -61,7 +63,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: AWSConfigSpec defines the desired state of AWSConfig
+            description: AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
             properties:
               name:
                 type: string
@@ -72,7 +74,7 @@ spec:
             - region
             type: object
           status:
-            description: AWSConfigStatus defines the observed state of AWSConfig
+            description: AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
             properties:
               eksCluster:
                 description: Contains the EKS cluster's details
