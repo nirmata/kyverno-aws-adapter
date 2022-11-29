@@ -27,4 +27,4 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2
       - name: Run chart-testing (lint)
-        run: ct lint --charts=./config/helm  --target-branch=main --check-version-increment=false
+        run: ct lint --charts=./charts/kyverno-aws-adapter  --target-branch=main --check-version-increment=false
