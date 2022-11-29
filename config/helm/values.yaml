@@ -2,35 +2,41 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# REQUIRED
+# -- Override the name of the chart
+nameOverride:
+
+# -- Override the expanded name of the chart
+fullnameOverride:
+
 namespace:
-  # set to true for creating the namespace, false if already present
+  # -- Set to true for creating the namespace, false if already present
   create: true
-  # name of the namespace to install the aws adapter
+
+  # -- Name of the namespace to install the aws adapter
   name: nirmata
 
-# REQUIRED To access AWS API
+# -- Role for accessing AWS API (REQUIRED)
 roleArn:
 
-# Interval at which the controller reconciles in minutes
-# Defaults to 30 if not defined
-pollInterval: 60
+# -- Interval at which the controller reconciles in minutes
+pollInterval: 30
 
-# REQUIRED To fetch cluster details
 eksCluster:
+  # -- EKS cluster name
   name:
+  # -- EKS cluster region
   region:
 
-# REQUIRED To pull the private image (ghcr.io)
 registryConfig:
+  # -- Username to pull the private image (ghcr.io)
   username:
+  # -- Password to pull the private image (ghcr.io)
   password:
 
 image:
+  # -- Image repository
   repository: ghcr.io/nirmata/aws-adapter
+  # -- Image pull policy
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- Image tag
   tag: latest
-
-nameOverride: ""
-fullnameOverride: ""

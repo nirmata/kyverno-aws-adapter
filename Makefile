@@ -150,3 +150,18 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+###########
+# CODEGEN #
+###########
+
+.PHONY: codegen-helm-docs
+codegen-helm-docs: ## Generate helm docs
+	@echo Generate helm docs... >&2
+	@docker run -v ${PWD}/config:/work -w /work jnorwood/helm-docs:v1.11.0 -s file
+
+.PHONY: verify-helm
+verify-helm: codegen-helm-all ## Check Helm charts are up to date
+	@echo Checking helm charts are up to date... >&2
+	@git --no-pager diff config/helm
+	@git diff --quiet --exit-code config/helm
