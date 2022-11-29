@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "nirmata-aws-adapter.fullname" . }}
-  namespace: {{ .Values.namespace.name }}
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: deployment
     app.kubernetes.io/instance: controller-manager
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: nirmata-aws-adapter
-    app.kubernetes.io/part-of: nirmata-aws-adapter
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
 spec:
   selector:
     matchLabels:
@@ -22,8 +22,10 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      {{- if .Values.registryConfig.username }}
       imagePullSecrets:
-      - name: {{ include "nirmata-aws-adapter.fullname" . }}
+      - name: {{ include "kyverno-aws-adapter.fullname" . }}
+      {{- end }}
       containers:
       - command:
         - /manager
@@ -65,5 +67,5 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-      serviceAccountName: nirmata-aws-adapter-sa
+      serviceAccountName: {{ include "kyverno-aws-adapter.fullname" . }}-sa
       terminationGracePeriodSeconds: 10

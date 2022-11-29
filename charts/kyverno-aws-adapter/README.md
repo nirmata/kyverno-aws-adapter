@@ -1,6 +1,6 @@
-# nirmata-aws-adapter
+# kyverno-aws-adapter
 
-Helm chart for the Nirmata AWS Adapter
+Helm chart for the Kyverno AWS Adapter
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
@@ -14,10 +14,10 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
 
-1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `nirmata-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
 2. Install the Helm chart after making any necessary changes to `charts/aws-adapter/values.yaml`
    ```sh
-   helm install nirmata-aws-adapter charts/aws-adapter
+   helm install kyverno-aws-adapter charts/aws-adapter
    ```
 3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `nirmata`, then:
    ```sh

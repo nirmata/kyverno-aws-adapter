@@ -1,20 +1,20 @@
-# nirmata-aws-adapter
+# kyverno-aws-adapter
 
 ## Description
-Nirmata AWS Adapter is a Kubernetes controller for the `AWSAdapterConfig` CRD. As of now, it observes the realtime state of an EKS cluster and reconciles it with the currently stored state, but can be further expanded to other AWS services later on by extending the current API with the help of [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
+Kyverno AWS Adapter is a Kubernetes controller for the `AWSAdapterConfig` CRD. As of now, it observes the realtime state of an EKS cluster and reconciles it with the currently stored state, but can be further expanded to other AWS services later on by extending the current API with the help of [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
 
 ## Installation
 You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
-1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `nirmata-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
-2. Install the Helm chart after making any necessary changes to `charts/aws-adapter/values.yaml`
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+2. Install the Helm chart after making any necessary changes to `charts/kyverno-aws-adapter/values.yaml`
    ```sh
-   helm install nirmata-aws-adapter charts/aws-adapter
+   helm install kyverno-aws-adapter charts/kyverno-aws-adapter
    ```
-3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `nirmata`, then:
+3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `kyverno-aws-adapter`, then:
    ```sh
-   kubectl get awsacfg eks-test-config -n nirmata -o yaml 
+   kubectl get awsacfg eks-test-config -n kyverno-aws-adapter -o yaml
    ```
 
 ## Helm Values
@@ -57,18 +57,18 @@ You can specify the Role's ARN in the `roleArn` field inside the Helm chart's `v
 Please ensure that the trust relationship policy for your IAM role resembles the following format:
 ```json
 {
-  "Version": "YYYY-MM-DD",
+  "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::$account_id:oidc-provider/$oidc_provider"
+        "Federated": "arn:aws:iam::<account_id>:oidc-provider/oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "$oidc_provider:aud": "sts.amazonaws.com",
-          "$oidc_provider:sub": "system:serviceaccount:$namespace:$service_account"
+          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:aud": "sts.amazonaws.com",
+          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:sub": "system:serviceaccount:$namespace:<service_account>"
         }
       }
     }
