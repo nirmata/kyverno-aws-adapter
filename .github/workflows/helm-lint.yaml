@@ -28,3 +28,5 @@ jobs:
         uses: helm/chart-testing-action@v2
       - name: Run chart-testing (lint)
         run: ct lint --charts=./config/helm  --target-branch=main --check-version-increment=false
+      - name: Check docs are up to date
+        run: make verify-helm-docs

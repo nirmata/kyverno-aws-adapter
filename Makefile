@@ -160,8 +160,8 @@ codegen-helm-docs: ## Generate helm docs
 	@echo Generate helm docs... >&2
 	@docker run -v ${PWD}/config:/work -w /work jnorwood/helm-docs:v1.11.0 -s file
 
-.PHONY: verify-helm
-verify-helm: codegen-helm-all ## Check Helm charts are up to date
-	@echo Checking helm charts are up to date... >&2
+.PHONY: verify-helm-docs
+verify-helm-docs: codegen-helm-docs ## Check helm docs are up to date
+	@echo Checking helm docs are up to date... >&2
 	@git --no-pager diff config/helm
 	@git diff --quiet --exit-code config/helm
