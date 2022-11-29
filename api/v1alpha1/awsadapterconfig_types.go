@@ -20,16 +20,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 type PollStatus string
 
 // AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig.
 type AWSAdapterConfigSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	Name   *string `json:"name"`
 	Region *string `json:"region"`
 }
@@ -220,6 +214,7 @@ type AWSAdapterConfigList struct {
 	Items           []AWSAdapterConfig `json:"items"`
 }
 
+//nolint: gochecknoinits
 func init() {
 	SchemeBuilder.Register(&AWSAdapterConfig{}, &AWSAdapterConfigList{})
 }

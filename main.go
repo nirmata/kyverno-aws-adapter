@@ -40,6 +40,7 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+//nolint: gochecknoinits
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -54,9 +55,7 @@ func main() {
 	var syncPeriod int64
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.Int64Var(&syncPeriod, "sync-period", 30, "The time interval for syncing the configuration in minutes ")
 	opts := zap.Options{
 		Development: true,

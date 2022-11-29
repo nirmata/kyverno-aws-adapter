@@ -7,6 +7,11 @@ linters:
     - gocognit
     - gocyclo
     - exhaustivestruct
+    - varnamelen
+    - gomnd
+    - godox
+    - nestif
+    - wsl
 
 run:
   timeout: 10m
