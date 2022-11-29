@@ -214,7 +214,7 @@ type AWSAdapterConfigList struct {
 	Items           []AWSAdapterConfig `json:"items"`
 }
 
-//nolint: gochecknoinits
+// nolint: gochecknoinits
 func init() {
 	SchemeBuilder.Register(&AWSAdapterConfig{}, &AWSAdapterConfigList{})
 }

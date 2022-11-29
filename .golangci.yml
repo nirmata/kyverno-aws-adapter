@@ -12,6 +12,8 @@ linters:
     - godox
     - nestif
     - wsl
+    - nolintlint
+    - exhaustruct
 
 run:
   timeout: 10m
