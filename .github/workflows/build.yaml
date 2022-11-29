@@ -22,5 +22,16 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - name: Make all
-        run: make all
+      - name: Update codegen
+        run: make manifests generate fmt
+      - name: Verify codegen
+        run: |
+          set -e
+          git --no-pager diff config
+          git diff --quiet --exit-code config
+          git --no-pager diff api
+          git diff --quiet --exit-code api
+      - name: Make build
+        run: make build
+      - name: Run go vet
+        run: make vet

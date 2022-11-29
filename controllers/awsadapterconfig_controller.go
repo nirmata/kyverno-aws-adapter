@@ -285,11 +285,11 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	currentPollTimestamp := time.Now()
 	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
-		Timestamp: &metav1.Time{currentPollTimestamp},
+		Timestamp: &metav1.Time{Time: currentPollTimestamp},
 		Status:    PollSuccess,
 	}
 	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
-		objNew.Status.LastUpdatedTimestamp = &metav1.Time{currentPollTimestamp}
+		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
 			l.Error(err, "error updating status")
 		}
@@ -307,7 +307,7 @@ func (r *AWSAdapterConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSAdapterConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
 	// if objOld.Status.LastPollInfo != nil {
 	objOld.Status.LastPollInfo.Status = PollFailure
-	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{currentPollTimestamp}
+	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{Time: currentPollTimestamp}
 	objOld.Status.LastPollInfo.Failure = &securityv1alpha1.PollFailure{
 		Message: msg,
 		Error:   err.Error(),
