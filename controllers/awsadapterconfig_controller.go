@@ -22,23 +22,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
 var PollFailure, PollSuccess securityv1alpha1.PollStatus = "failure", "success"
 
-// AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object
+// AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object.
 type AWSAdapterConfigReconciler struct {
 	client.Client
 	Scheme          *runtime.Scheme
@@ -202,7 +201,6 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 						Message:     issue.Message,
 						ResourceIDs: issue.ResourceIds,
 					})
-
 				}
 
 				autoScalingGroups := []string{}

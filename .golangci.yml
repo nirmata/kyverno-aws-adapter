@@ -1,5 +1,8 @@
 linters:
   enable-all: true
 
+  disable:
+    - funlen
+
 run:
   timeout: 10m
