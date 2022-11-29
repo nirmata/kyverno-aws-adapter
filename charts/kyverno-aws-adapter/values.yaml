@@ -8,7 +8,8 @@ namespace:
   name: kyverno-aws-adapter
 
 # REQUIRED To access AWS API
-roleArn: # eg. arn:aws:iam::123456789012:role/kyverno-aws-adapter
+# Eg. arn:aws:iam::123456789012:role/kyverno-aws-adapter
+roleArn:
 
 # Interval at which the controller reconciles in minutes.
 # Defaults to 30 if not defined.
