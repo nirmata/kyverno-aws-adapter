@@ -1,4 +1,4 @@
-# Default values for Kyverno AWS Adapter.
+# Default values for kyverno-aws-adapter.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -12,25 +12,29 @@ roleArn: # eg. arn:aws:iam::123456789012:role/kyverno-aws-adapter
 
 # Interval at which the controller reconciles in minutes.
 # Defaults to 30 if not defined.
-pollInterval: 1
+pollInterval: 60
 
 # REQUIRED To fetch cluster details
 eksCluster:
   # Name of the cluster. Eg. 'my-cluster'
-  name: test
+  name:
   # Region code of the cluster. Eg. 'us-west-1'
-  region: us-west-1
+  region:
 
-# To pull the private image (ghcr.io)
+# To pull a private image from ghcr.io
 registryConfig:
+  # GitHub account username
   username:
+  # GitHub account PAT
   password:
 
 image:
+  # Image repository
   repository: ghcr.io/nirmata/kyverno-aws-adapter
+  # Image pull policy
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: test
+  tag: latest
 
 nameOverride: ""
 fullnameOverride: ""

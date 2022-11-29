@@ -6,8 +6,8 @@ metadata:
     app.kubernetes.io/instance: awsacfg-sample
     app.kubernetes.io/part-of: kyverno-aws-adapter
     app.kubernetes.io/created-by: kyverno-aws-adapter
-  name: eks-test-config
-  namespace: nirmata
+  name: test-config
+  namespace: abcd
 spec:
-  name: eks-test
+  name: test
   region: us-west-1
