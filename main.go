@@ -21,19 +21,17 @@ import (
 	"os"
 	"time"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
+	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
+	"github.com/nirmata/kyverno-aws-adapter/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
-	"github.com/nirmata/kyverno-aws-adapter/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -42,6 +40,7 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+// nolint: gochecknoinits
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -56,9 +55,7 @@ func main() {
 	var syncPeriod int64
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.Int64Var(&syncPeriod, "sync-period", 30, "The time interval for syncing the configuration in minutes ")
 	opts := zap.Options{
 		Development: true,
