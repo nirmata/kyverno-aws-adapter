@@ -24,6 +24,15 @@ jobs:
           go-version-file: go.mod
       - name: Update codegen
         run: make manifests generate fmt
+      - name: Go mod tidy
+        run: go mod tidy
+      - name: Verify go mod
+        run: |
+          set -e
+          git --no-pager diff go.mod
+          git diff --quiet --exit-code go.mod
+          git --no-pager diff go.sum
+          git diff --quiet --exit-code go.sum
       - name: Verify codegen
         run: |
           set -e
