@@ -36,7 +36,10 @@ import (
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
-var PollFailure, PollSuccess securityv1alpha1.PollStatus = "failure", "success"
+const (
+	PollFailure securityv1alpha1.PollStatus = "failure"
+	PollSuccess securityv1alpha1.PollStatus = "success"
+)
 
 // AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object
 type AWSAdapterConfigReconciler struct {
@@ -51,13 +54,6 @@ type AWSAdapterConfigReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the AWSAdapterConfig object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
 
@@ -87,9 +83,13 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	objNew := objOld.DeepCopy()
 	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
 
-	// TODO: list all clusters instead of going through just first 100
 	clusterFound := false
+
 	if x, err := svc.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
+		if x.NextToken != nil {
+			l.Info("Warning: more than 100 clusters found in the AWS account, fetching only 100")
+		}
+
 		for _, v := range x.Clusters {
 			if c, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: &v}); err == nil {
 				if v == *objOld.Spec.Name && strings.ToLower(string(c.Cluster.Status)) != "deleting" {
@@ -305,7 +305,6 @@ func (r *AWSAdapterConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSAdapterConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
-	// if objOld.Status.LastPollInfo != nil {
 	objOld.Status.LastPollInfo.Status = PollFailure
 	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{Time: currentPollTimestamp}
 	objOld.Status.LastPollInfo.Failure = &securityv1alpha1.PollFailure{

@@ -24,3 +24,6 @@ Dockerfile.cross
 *.swp
 *.swo
 *~
+
+# macOS based files
+.DS_Store

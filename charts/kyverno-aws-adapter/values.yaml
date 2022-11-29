@@ -1,0 +1,41 @@
+# Default values for kyverno-aws-adapter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# REQUIRED To install the Helm chart.
+namespace:
+  # Name of the namespace to install the Kyverno AWS Adapter.
+  name: kyverno-aws-adapter
+
+# REQUIRED To access AWS API
+# Eg. arn:aws:iam::123456789012:role/kyverno-aws-adapter
+roleArn:
+
+# Interval at which the controller reconciles in minutes.
+# Defaults to 30 if not defined.
+pollInterval: 60
+
+# REQUIRED To fetch cluster details
+eksCluster:
+  # Name of the cluster. Eg. 'my-cluster'
+  name:
+  # Region code of the cluster. Eg. 'us-west-1'
+  region:
+
+# To pull a private image from ghcr.io
+registryConfig:
+  # GitHub account username
+  username:
+  # GitHub account PAT
+  password:
+
+image:
+  # Image repository
+  repository: ghcr.io/nirmata/kyverno-aws-adapter
+  # Image pull policy
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+nameOverride: ""
+fullnameOverride: ""
