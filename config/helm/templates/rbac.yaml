@@ -6,9 +6,9 @@ metadata:
     app.kubernetes.io/name: clusterrole
     app.kubernetes.io/instance: awsacfg-editor-role
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: nirmata-aws-adapter
-    app.kubernetes.io/part-of: nirmata-aws-adapter
-  name: awsacfg-manager-role
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+  name: {{ include "kyverno-aws-adapter.fullname" . }}-role
 rules:
 - apiGroups:
   - security.nirmata.io
@@ -48,14 +48,14 @@ metadata:
     app.kubernetes.io/name: clusterrolebinding
     app.kubernetes.io/instance: awsacfg-manager-rolebinding
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: nirmata-aws-adapter
-    app.kubernetes.io/part-of: nirmata-aws-adapter
-  name: awsacfg-manager-rolebinding
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+  name: {{ include "kyverno-aws-adapter.fullname" . }}-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: awsacfg-manager-role
+  name: {{ include "kyverno-aws-adapter.fullname" . }}-role
 subjects:
 - kind: ServiceAccount
-  name: nirmata-aws-adapter-sa
-  namespace: {{ .Values.namespace.name }}
+  name: {{ include "kyverno-aws-adapter.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}

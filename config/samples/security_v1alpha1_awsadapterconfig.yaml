@@ -4,8 +4,8 @@ metadata:
   labels:
     app.kubernetes.io/name: awsadapterconfig
     app.kubernetes.io/instance: awsacfg-sample
-    app.kubernetes.io/part-of: nirmata-aws-adapter
-    app.kubernetes.io/created-by: nirmata-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/created-by: kyverno-aws-adapter
   name: eks-test-config
   namespace: nirmata
 spec:

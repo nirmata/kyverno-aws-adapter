@@ -12,6 +12,8 @@ spec:
     kind: AWSAdapterConfig
     listKind: AWSAdapterConfigList
     plural: awsadapterconfigs
+    shortNames:
+    - awsacfg
     singular: awsadapterconfig
   scope: Namespaced
   versions:
