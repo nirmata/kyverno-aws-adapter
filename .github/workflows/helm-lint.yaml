@@ -29,4 +29,4 @@ jobs:
       - name: Check docs are up to date
         run: make verify-helm-docs
       - name: Run chart-testing (lint)
-        run: ct lint --chart-dir=./charts --target-branch=main --check-version-increment=false
+        run: ct lint --chart-dirs=./charts --target-branch=main --check-version-increment=false
