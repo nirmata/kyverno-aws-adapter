@@ -24,10 +24,9 @@ type PollStatus string
 
 // AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
 type AWSAdapterConfigSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	Name   *string `json:"name"`
+	// EKS cluster's name
+	Name *string `json:"name"`
+	// EKS cluster's region
 	Region *string `json:"region"`
 }
 
@@ -179,11 +178,14 @@ type LastPollInfo struct {
 
 // AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
 type AWSAdapterConfigStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Timestamp when the Status was last updated
 	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
-	LastPollInfo         LastPollInfo `json:"lastPollInfo"`
-	EKSCluster           *EKSCluster  `json:"eksCluster,omitempty"`
+	// Information on when the adapter last tried to fetch the EKS cluster details
+	LastPollInfo LastPollInfo `json:"lastPollInfo"`
+	// EKS cluster details fetched from AWS
+	// For details of individual fields, refer to AWS SDK docs:
+	// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/eks@v1.22.1/types#Cluster
+	EKSCluster *EKSCluster `json:"eksCluster,omitempty"`
 }
 
 //+kubebuilder:object:root=true
