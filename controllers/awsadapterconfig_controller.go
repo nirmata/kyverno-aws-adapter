@@ -35,7 +35,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var PollFailure, PollSuccess securityv1alpha1.PollStatus = "failure", "success"
+const (
+	PollFailure securityv1alpha1.PollStatus = "failure"
+	PollSuccess securityv1alpha1.PollStatus = "success"
+)
 
 // AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object.
 type AWSAdapterConfigReconciler struct {

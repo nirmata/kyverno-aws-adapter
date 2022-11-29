@@ -3,6 +3,10 @@ linters:
 
   disable:
     - funlen
+    - lll
+    - gocognit
+    - gocyclo
+    - exhaustivestruct
 
 run:
   timeout: 10m
