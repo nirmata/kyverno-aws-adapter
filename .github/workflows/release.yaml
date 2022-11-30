@@ -34,7 +34,7 @@ jobs:
           for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
             chart=${dir##*/}
             echo "Found chart: ${chart}"
-            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .helm-dist
+            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .cr-release-packages
           done
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@main
