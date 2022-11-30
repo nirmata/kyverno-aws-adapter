@@ -60,4 +60,20 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+  {{- if .Values.roleArn }}
+    eks.amazonaws.com/role-arn: {{ .Values.roleArn }}
+  {{- end }}
+  labels:
+    app.kubernetes.io/name: serviceaccount
+    app.kuberentes.io/instance: controller-manager
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
 {{- end -}}
