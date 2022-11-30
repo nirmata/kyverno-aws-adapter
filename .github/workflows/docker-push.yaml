@@ -21,4 +21,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Make all
-        run: IMG="$IMG_REPOSITORY:$GITHUB_SHA" make docker-buildx
+        run: |
+          set -e
+          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          IMG="$IMG_REPOSITORY:$GITHUB_SHA" make docker-buildx
