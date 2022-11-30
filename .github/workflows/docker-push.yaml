@@ -9,7 +9,7 @@ env:
   IMG_REPOSITORY : ghcr.io/nirmata/kyverno-aws-adapter
 
 jobs:
-  build:
+  push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
