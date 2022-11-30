@@ -26,5 +26,7 @@ jobs:
           python-version: 3.7
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2
+      - name: Check docs are up to date
+        run: make verify-helm-docs
       - name: Run chart-testing (lint)
-        run: ct lint --charts=./charts/kyverno-aws-adapter  --target-branch=main --check-version-increment=false
+        run: ct lint --chart-dirs=./charts --target-branch=main --check-version-increment=false
