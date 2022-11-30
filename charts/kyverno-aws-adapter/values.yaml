@@ -39,5 +39,5 @@ image:
   repository: ghcr.io/nirmata/kyverno-aws-adapter
   # -- Image pull policy
   pullPolicy: Always
-  # -- Image tag
-  tag: latest
+  # -- Image tag (defaults to chart app version)
+  tag:

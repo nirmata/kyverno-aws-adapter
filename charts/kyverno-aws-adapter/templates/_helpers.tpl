@@ -66,3 +66,7 @@ Generate the dockerconfigjson value
 {{- $user_pwd_hashed := printf "%s:%s" .Values.registryConfig.username .Values.registryConfig.password | b64enc }}
 {{- printf "{\"auths\":{\"ghcr.io\":{\"auth\":\"%s\"}}}" $user_pwd_hashed | b64enc }}
 {{- end }}
+
+{{- define "kyverno-aws-adapter.image" -}}
+{{ printf "%s:%s" (required "An image repository is required" .Values.image.repository) (default .Chart.AppVersion .Values.image.tag) }}
+{{- end }}

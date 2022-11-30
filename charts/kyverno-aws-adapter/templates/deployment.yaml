@@ -28,7 +28,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "kyverno-aws-adapter.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
         {{- if .Values.pollInterval }}
