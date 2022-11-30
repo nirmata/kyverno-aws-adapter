@@ -23,5 +23,5 @@ jobs:
       - name: Make all
         run: |
           set -e
-          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           IMG="$IMG_REPOSITORY:$GITHUB_SHA" make docker-buildx
