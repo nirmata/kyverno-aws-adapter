@@ -1,3 +1,4 @@
+{{- if .Values.rbac.create -}}
 # permissions for end users to edit awsadapterconfigs.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -57,5 +58,6 @@ roleRef:
   name: {{ include "kyverno-aws-adapter.fullname" . }}
 subjects:
 - kind: ServiceAccount
-  name: {{ include "kyverno-aws-adapter.fullname" . }}
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
+{{- end -}}
