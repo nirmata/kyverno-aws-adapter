@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: kyverno-aws-adapter
     app.kubernetes.io/part-of: kyverno-aws-adapter
-  name: {{ include "kyverno-aws-adapter.fullname" . }}-role
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
 rules:
 - apiGroups:
   - security.nirmata.io
@@ -50,12 +50,12 @@ metadata:
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: kyverno-aws-adapter
     app.kubernetes.io/part-of: kyverno-aws-adapter
-  name: {{ include "kyverno-aws-adapter.fullname" . }}-rolebinding
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "kyverno-aws-adapter.fullname" . }}-role
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
 subjects:
 - kind: ServiceAccount
-  name: {{ include "kyverno-aws-adapter.fullname" . }}-sa
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
   namespace: {{ .Release.Namespace }}

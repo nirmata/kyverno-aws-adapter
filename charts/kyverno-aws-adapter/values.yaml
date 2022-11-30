@@ -8,13 +8,6 @@ nameOverride:
 # -- Override the expanded name of the chart
 fullnameOverride:
 
-namespace:
-  # -- Set to true for creating the namespace, false if already present
-  create: true
-
-  # -- Name of the namespace to install the aws adapter
-  name: kyverno-aws-adapter
-
 # -- Role for accessing AWS API (REQUIRED)
 roleArn:
 
