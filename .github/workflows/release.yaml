@@ -21,26 +21,8 @@ jobs:
           go-version-file: go.mod
       - name: Install Helm
         uses: azure/setup-helm@v3
-      - name: Create charts tmp directory
-        run: |
-          set -e
-          mkdir charts-tmp
-          cp -a charts/kyverno-aws-adapter charts-tmp/kyverno-aws-adapter
-      - name: Package charts
-        run: |
-          set -e
-          for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
-            chart=${dir##*/}
-            echo "Found chart: ${chart}"
-            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .helm-dist
-          done
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@98bccfd32b0f76149d188912ac8e45ddd3f8695f # main
         with:
-          charts_dir: .helm-dist
-          skip_packaging: true
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -53,3 +35,27 @@ jobs:
           set -e
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           IMG="$IMG_REPOSITORY:${{ github.ref_name }}" make docker-buildx
+      - name: Create charts tmp directory
+        run: |
+          set -e
+          mkdir charts-tmp
+          cp -a charts/kyverno-aws-adapter charts-tmp/kyverno-aws-adapter
+      - name: Package charts
+        run: |
+          set -e
+          for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
+            chart=${dir##*/}
+            echo "Found chart: ${chart}"
+            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .cr-release-packages
+          done
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@main
+        with:
+          charts_dir: .helm-dist
+          skip_packaging: true
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
