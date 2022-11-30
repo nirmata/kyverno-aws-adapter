@@ -30,8 +30,6 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 |-----|------|---------|-------------|
 | nameOverride | string | `nil` | Override the name of the chart |
 | fullnameOverride | string | `nil` | Override the expanded name of the chart |
-| namespace.create | bool | `true` | Set to true for creating the namespace, false if already present |
-| namespace.name | string | `"kyverno-aws-adapter"` | Name of the namespace to install the aws adapter |
 | roleArn | string | `nil` | Role for accessing AWS API (REQUIRED) |
 | pollInterval | int | `30` | Interval at which the controller reconciles in minutes |
 | eksCluster.name | string | `nil` | EKS cluster name |
