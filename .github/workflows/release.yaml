@@ -21,6 +21,8 @@ jobs:
           go-version-file: go.mod
       - name: Install Helm
         uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -44,10 +46,14 @@ jobs:
           for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
             chart=${dir##*/}
             echo "Found chart: ${chart}"
-            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }}  --destination .helm-dist
+            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .cr-release-packages
           done
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.4.1
+        uses: helm/chart-releaser-action@main
         with:
           charts_dir: .helm-dist
           skip_packaging: true
