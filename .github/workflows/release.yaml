@@ -35,14 +35,16 @@ jobs:
           IMG="$IMG_REPOSITORY:${{ github.ref_name }}" make docker-buildx
       - name: Create charts tmp directory
         run: |
+          set -e
           mkdir charts-tmp
           cp -a charts/kyverno-aws-adapter charts-tmp/kyverno-aws-adapter
       - name: Package charts
         run: |
+          set -e
           for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
             chart=${dir##*/}
             echo "Found chart: ${chart}"
-            helm package charts-tmp/${chart} --destination --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} .helm-dist
+            helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }}  --destination .helm-dist
           done
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
