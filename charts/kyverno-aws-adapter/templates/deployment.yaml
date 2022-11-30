@@ -67,5 +67,5 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
-      serviceAccountName: {{ include "kyverno-aws-adapter.fullname" . }}-sa
+      serviceAccountName: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
       terminationGracePeriodSeconds: 10

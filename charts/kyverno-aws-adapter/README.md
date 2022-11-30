@@ -36,6 +36,8 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 | eksCluster.region | string | `nil` | EKS cluster region |
 | registryConfig.username | string | `nil` | Username to pull the private image (ghcr.io) |
 | registryConfig.password | string | `nil` | Password to pull the private image (ghcr.io) |
+| rbac.create | bool | `true` | Enable RBAC resources creation |
+| rbac.serviceAccount.name | string | `nil` | Service account name, you MUST provide one when `rbac.create` is set to `false` |
 | image.repository | string | `"ghcr.io/nirmata/kyverno-aws-adapter"` | Image repository |
 | image.pullPolicy | string | `"Always"` | Image pull policy |
 | image.tag | string | `"latest"` | Image tag |

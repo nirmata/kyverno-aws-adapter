@@ -30,6 +30,15 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{/* Create the name of the service account to use */}}
+{{- define "kyverno-aws-adapter.serviceAccountName" -}}
+{{- if .Values.rbac.create -}}
+    {{ default (include "kyverno-aws-adapter.fullname" .) .Values.rbac.serviceAccount.name }}
+{{- else -}}
+    {{ required "A service account name is required when `rbac.create` is set to `false`" .Values.rbac.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Common labels
 */}}

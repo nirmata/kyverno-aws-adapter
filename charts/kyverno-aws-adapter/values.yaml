@@ -26,6 +26,14 @@ registryConfig:
   # -- Password to pull the private image (ghcr.io)
   password:
 
+rbac:
+  # -- Enable RBAC resources creation
+  create: true
+
+  serviceAccount:
+    # -- Service account name, you MUST provide one when `rbac.create` is set to `false`
+    name: 
+
 image:
   # -- Image repository
   repository: ghcr.io/nirmata/kyverno-aws-adapter
