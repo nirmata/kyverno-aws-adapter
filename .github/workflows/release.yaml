@@ -19,6 +19,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
+      - name: Install Helm
+        uses: azure/setup-helm@v3
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
