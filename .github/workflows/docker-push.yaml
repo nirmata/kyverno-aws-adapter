@@ -1,0 +1,24 @@
+name: Docker push
+
+on:
+  push:
+    branches:
+      - 'main'
+
+env:
+  IMG_REPOSITORY : ghcr.io/nirmata/kyverno-aws-adapter
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+      - name: Set up Go 
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+      - name: Make all
+        run: IMG="$IMG_REPOSITORY:$GITHUB_SHA" make docker-buildx
