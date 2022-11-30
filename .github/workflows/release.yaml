@@ -44,10 +44,10 @@ jobs:
             echo "Found chart: ${chart}"
             helm package charts-tmp/${chart} --destination --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} .helm-dist
           done
-      # - name: Run chart-releaser
-      #   uses: helm/chart-releaser-action@v1.4.1
-      #   with:
-      #     charts_dir: .helm-dist
-      #     skip_packaging: true
-      #   env:
-      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.4.1
+        with:
+          charts_dir: .helm-dist
+          skip_packaging: true
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
