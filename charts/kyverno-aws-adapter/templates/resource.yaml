@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/instance: awsacfg-resource
     app.kubernetes.io/part-of: kyverno-aws-adapter
     app.kubernetes.io/created-by: kyverno-aws-adapter
-  name: {{ .Values.eksCluster.name }}-config
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   name: {{ .Values.eksCluster.name }}
