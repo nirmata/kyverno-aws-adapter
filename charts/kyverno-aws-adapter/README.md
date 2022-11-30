@@ -28,19 +28,19 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| eksCluster.name | string | `nil` | EKS cluster name |
-| eksCluster.region | string | `nil` | EKS cluster region |
-| fullnameOverride | string | `nil` | Override the expanded name of the chart |
-| image.pullPolicy | string | `"Always"` | Image pull policy |
-| image.repository | string | `"ghcr.io/nirmata/kyverno-aws-adapter"` | Image repository |
-| image.tag | string | `"latest"` | Image tag |
 | nameOverride | string | `nil` | Override the name of the chart |
+| fullnameOverride | string | `nil` | Override the expanded name of the chart |
 | namespace.create | bool | `true` | Set to true for creating the namespace, false if already present |
 | namespace.name | string | `"kyverno-aws-adapter"` | Name of the namespace to install the aws adapter |
-| pollInterval | int | `30` | Interval at which the controller reconciles in minutes |
-| registryConfig.password | string | `nil` | Password to pull the private image (ghcr.io) |
-| registryConfig.username | string | `nil` | Username to pull the private image (ghcr.io) |
 | roleArn | string | `nil` | Role for accessing AWS API (REQUIRED) |
+| pollInterval | int | `30` | Interval at which the controller reconciles in minutes |
+| eksCluster.name | string | `nil` | EKS cluster name |
+| eksCluster.region | string | `nil` | EKS cluster region |
+| registryConfig.username | string | `nil` | Username to pull the private image (ghcr.io) |
+| registryConfig.password | string | `nil` | Password to pull the private image (ghcr.io) |
+| image.repository | string | `"ghcr.io/nirmata/kyverno-aws-adapter"` | Image repository |
+| image.pullPolicy | string | `"Always"` | Image pull policy |
+| image.tag | string | `"latest"` | Image tag |
 
 ## IAM Role for Service Account
 
