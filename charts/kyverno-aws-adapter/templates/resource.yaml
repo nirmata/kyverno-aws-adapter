@@ -8,5 +8,5 @@ metadata:
     app.kubernetes.io/created-by: kyverno-aws-adapter
   name: {{ include "kyverno-aws-adapter.fullname" . }}
 spec:
-  name: {{ .Values.eksCluster.name }}
-  region: {{ .Values.eksCluster.region }}
+  name: {{ required "EKS cluster name is required" .Values.eksCluster.name }}
+  region: {{ required "EKS cluster region is required" .Values.eksCluster.region }}
