@@ -36,6 +36,10 @@ jobs:
             echo "Found chart: ${chart}"
             helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .cr-release-packages
           done
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@main
         with:
