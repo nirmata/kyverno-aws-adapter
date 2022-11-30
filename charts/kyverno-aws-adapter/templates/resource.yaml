@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/part-of: kyverno-aws-adapter
     app.kubernetes.io/created-by: kyverno-aws-adapter
   name: {{ .Values.eksCluster.name }}-config
-  namespace: {{ .Release.Namespace }}
 spec:
   name: {{ .Values.eksCluster.name }}
   region: {{ .Values.eksCluster.region }}
