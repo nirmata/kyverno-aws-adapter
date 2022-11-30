@@ -21,6 +21,8 @@ jobs:
           go-version-file: go.mod
       - name: Install Helm
         uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create charts tmp directory
         run: |
           set -e
@@ -35,7 +37,7 @@ jobs:
             helm package charts-tmp/${chart} --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} --destination .helm-dist
           done
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@98bccfd32b0f76149d188912ac8e45ddd3f8695f # main
+        uses: helm/chart-releaser-action@main
         with:
           charts_dir: .helm-dist
           skip_packaging: true
