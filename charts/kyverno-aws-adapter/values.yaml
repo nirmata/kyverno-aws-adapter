@@ -32,7 +32,7 @@ rbac:
 
   serviceAccount:
     # -- Service account name, you MUST provide one when `rbac.create` is set to `false`
-    name: 
+    name:
 
 image:
   # -- Image repository
