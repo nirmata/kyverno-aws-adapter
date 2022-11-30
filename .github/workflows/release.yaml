@@ -19,6 +19,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
+      - name: Install Helm
+        uses: azure/setup-helm@v3
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -31,3 +33,21 @@ jobs:
           set -e
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           IMG="$IMG_REPOSITORY:${{ github.ref_name }}" make docker-buildx
+      - name: Create charts tmp directory
+        run: |
+          mkdir charts-tmp
+          cp -a charts/kyverno-aws-adapter charts-tmp/kyverno-aws-adapter
+      - name: Package charts
+        run: |
+          for dir in `find charts-tmp -maxdepth 1 -mindepth 1 -type d -print`; do
+            chart=${dir##*/}
+            echo "Found chart: ${chart}"
+            helm package charts-tmp/${chart} --destination --version ${{ github.ref_name }} --app-version ${{ github.ref_name }} .helm-dist
+          done
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.4.1
+        with:
+          charts_dir: .helm-dist
+          skip_packaging: true
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

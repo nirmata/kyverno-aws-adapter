@@ -2,7 +2,7 @@
 
 Helm chart for the Kyverno AWS Adapter
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: v0.0.1](https://img.shields.io/badge/Version-v0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.0.1](https://img.shields.io/badge/AppVersion-v0.0.1-informational?style=flat-square)
 
 ## Description
 
@@ -40,7 +40,7 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 | rbac.serviceAccount.name | string | `nil` | Service account name, you MUST provide one when `rbac.create` is set to `false` |
 | image.repository | string | `"ghcr.io/nirmata/kyverno-aws-adapter"` | Image repository |
 | image.pullPolicy | string | `"Always"` | Image pull policy |
-| image.tag | string | `"latest"` | Image tag |
+| image.tag | string | `nil` | Image tag (defaults to chart app version) |
 
 ## IAM Role for Service Account
 

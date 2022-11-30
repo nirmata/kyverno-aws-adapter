@@ -2,8 +2,8 @@ apiVersion: v2
 name: kyverno-aws-adapter
 description: Helm chart for the Kyverno AWS Adapter
 type: application
-version: 0.1.0
-appVersion: 0.1.0
+version: v0.0.1
+appVersion: v0.0.1
 keywords:
   - kubernetes
   - nirmata
