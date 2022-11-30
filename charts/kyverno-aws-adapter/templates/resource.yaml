@@ -1,12 +1,9 @@
 apiVersion: security.nirmata.io/v1alpha1
 kind: AWSAdapterConfig
 metadata:
-  labels:
-    app.kubernetes.io/name: awsadapterconfig
-    app.kubernetes.io/instance: awsacfg-resource
-    app.kubernetes.io/part-of: kyverno-aws-adapter
-    app.kubernetes.io/created-by: kyverno-aws-adapter
   name: {{ include "kyverno-aws-adapter.fullname" . }}
+  labels:
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
 spec:
   name: {{ required "EKS cluster name is required" .Values.eksCluster.name }}
   region: {{ required "EKS cluster region is required" .Values.eksCluster.region }}

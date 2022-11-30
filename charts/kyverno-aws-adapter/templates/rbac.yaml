@@ -3,13 +3,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: awsacfg-editor-role
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
   name: {{ include "kyverno-aws-adapter.fullname" . }}
+  labels:
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - security.nirmata.io
@@ -45,28 +41,20 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+  labels:
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
   annotations:
   {{- if .Values.roleArn }}
     eks.amazonaws.com/role-arn: {{ .Values.roleArn }}
   {{- end }}
-  labels:
-    app.kubernetes.io/name: serviceaccount
-    app.kuberentes.io/instance: controller-manager
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
-  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  labels:
-    app.kubernetes.io/name: clusterrolebinding
-    app.kubernetes.io/instance: awsacfg-manager-rolebinding
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kyverno-aws-adapter
-    app.kubernetes.io/part-of: kyverno-aws-adapter
   name: {{ include "kyverno-aws-adapter.fullname" . }}
+  labels:
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
