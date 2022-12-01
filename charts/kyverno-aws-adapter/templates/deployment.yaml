@@ -16,9 +16,9 @@ spec:
       labels:
         {{- include "kyverno-aws-adapter.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.registryConfig.username }}
+      {{- with .Values.image.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ include "kyverno-aws-adapter.fullname" . }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
       - command:
