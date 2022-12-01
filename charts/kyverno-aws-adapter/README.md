@@ -15,14 +15,22 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 ### Running on the EKS cluster
 
 1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
-2. Install the Helm chart after making any necessary changes to `charts/kyverno-aws-adapter/values.yaml`
-   ```sh
-   helm install kyverno-aws-adapter charts/kyverno-aws-adapter
-   ```
-3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `kyverno-aws-adapter`, then:
-   ```sh
-   kubectl get awsacfg eks-test-config -n kyverno-aws-adapter -o yaml
-   ```
+
+2. Add the Kyverno AWS Adapter Helm repository.
+    ```console
+    helm repo add kyverno-aws-adapter https://nirmata.github.io/kyverno-aws-adapter/
+    helm repo update kyverno-aws-adapter
+    ```
+
+3. Install the Helm chart in an appropriate namespace, providing other parameters as described in the [Values](#values) section.
+    ```console
+    helm install --namespace kyverno-aws-adapter --create-namespace kyverno-aws-adapter kyverno-aws-adapter/kyverno-aws-adapter
+    ```
+
+4. Check the `status` field of the `awsacfg` custom resource created in the namespace specified in `values.yaml`. For instance if namespace is `kyverno-aws-adapter`, then:
+    ```console
+    kubectl get awsacfg -n kyverno-aws-adapter -o yaml
+    ```
 
 ## Values
 
