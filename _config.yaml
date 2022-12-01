@@ -1,0 +1,3 @@
+theme: jekyll-theme-cayman
+name: Kyverno AWS Adapter
+description: Helm chart for the Kyverno AWS Adapter
