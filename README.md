@@ -3,7 +3,12 @@
 ## Description
 Kyverno AWS Adapter is a Kubernetes controller for the `AWSAdapterConfig` CRD. As of now, it observes the realtime state of an EKS cluster and reconciles it with the currently stored state, but can be further expanded to other AWS services later on by extending the current API with the help of [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
 
-## Installation
+## Getting Started
+Check out the [getting_started.md](docs/getting_started.md) guide for installing the Nirmata Kyverno Adapter for AWS.
+
+
+## Local Dev Installation
+### Prerequisites
 You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
@@ -60,19 +65,3 @@ Please ensure that the trust relationship policy for your IAM role resembles the
 ```
 
 For detailed instructions on how to configure the IAM role for service account, check out the official AWS documentation on [IAM roles for service accounts](https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html).
-
-## License
-
-Copyright 2022.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
