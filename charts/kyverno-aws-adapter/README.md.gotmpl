@@ -22,9 +22,9 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
     helm repo update kyverno-aws-adapter
     ```
 
-3. Install the Helm chart providing parameters as described in the [Values](#values) section.
+3. Install the Helm chart in an appropriate namespace, providing other parameters as described in the [Values](#values) section. 
     ```console
-    helm install kyverno-aws-adapter kyverno-aws-adapter/kyverno-aws-adapter
+    helm install kyverno-aws-adapter kyverno-aws-adapter/kyverno-aws-adapter --namespace kyverno-aws-adapter --create-namespace 
     ```
 
 4. Check the `status` field of the `awsacfg` custom resource created in the namespace specified in `values.yaml`. For instance if namespace is `kyverno-aws-adapter`, then:
