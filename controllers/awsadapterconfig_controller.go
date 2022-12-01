@@ -225,8 +225,8 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 						Ec2SshKey:            y.Nodegroup.RemoteAccess.Ec2SshKey,
 						SourceSecurityGroups: y.Nodegroup.RemoteAccess.SourceSecurityGroups,
 					}
-
 				}
+
 				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
 					Name: v,
 					ScalingConfig: &securityv1alpha1.EKSNodeGroupScalingConfig{
