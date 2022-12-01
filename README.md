@@ -35,7 +35,7 @@ This adapter utilizes the ARN of a user-defined IAM Role associated with any pol
 | DescribeUpdate |
 | ListTagsForResource |
 
-You can specify the Role's ARN through the `roleArn` setting in the [Helm chart](https://github.com/nirmata/kyverno-aws-adapter/tree/main/charts/kyverno-aws-adapter#installation).
+You can specify the Role's ARN through the `roleArn` setting in the [Helm chart](/charts/kyverno-aws-adapter#installation).
 
 Please ensure that the trust relationship policy for your IAM role resembles the following format:
 ```json
