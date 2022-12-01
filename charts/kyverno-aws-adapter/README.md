@@ -14,7 +14,7 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
 
-1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) to be used by the Adapter, through the `roleArn` parameter of the Helm install command that follows.
 
 2. Add the Kyverno AWS Adapter Helm repository.
     ```console
@@ -22,12 +22,12 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
     helm repo update kyverno-aws-adapter
     ```
 
-3. Install the Helm chart in an appropriate namespace, providing other parameters as described in the [Values](#values) section.
+3. Install the Helm chart in an appropriate namespace, providing other parameters as described in the [Values](#values) section. Parameters `roleArn`, `eksCluster.name`, `eksCluster.region`  are required.
     ```console
     helm install --namespace kyverno-aws-adapter --create-namespace kyverno-aws-adapter kyverno-aws-adapter/kyverno-aws-adapter
     ```
 
-4. Check the `status` field of the `awsacfg` custom resource created in the namespace specified in `values.yaml`. For instance if namespace is `kyverno-aws-adapter`, then:
+4. Check the `status` field of the `awsacfg` custom resource created in the installation namespace. For instance:
     ```console
     kubectl get awsacfg -n kyverno-aws-adapter -o yaml
     ```
@@ -40,8 +40,8 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 | fullnameOverride | string | `nil` | Override the expanded name of the chart |
 | roleArn | string | `nil` | Role for accessing AWS API (REQUIRED) |
 | pollInterval | int | `30` | Interval at which the controller reconciles in minutes |
-| eksCluster.name | string | `nil` | EKS cluster name |
-| eksCluster.region | string | `nil` | EKS cluster region |
+| eksCluster.name | string | `nil` | EKS cluster name (REQUIRED) |
+| eksCluster.region | string | `nil` | EKS cluster region (REQUIRED) |
 | rbac.create | bool | `true` | Enable RBAC resources creation |
 | rbac.serviceAccount.name | string | `nil` | Service account name, you MUST provide one when `rbac.create` is set to `false` |
 | image.repository | string | `"ghcr.io/nirmata/kyverno-aws-adapter"` | Image repository |
@@ -70,8 +70,6 @@ This adapter utilizes the ARN of a user-defined IAM Role associated with any pol
 | DescribeNodegroup |
 | DescribeUpdate |
 | ListTagsForResource |
-
-You can specify the Role's ARN in the `roleArn` field inside the Helm chart's `values.yaml` file.
 
 Please ensure that the trust relationship policy for your IAM role resembles the following format:
 ```json
