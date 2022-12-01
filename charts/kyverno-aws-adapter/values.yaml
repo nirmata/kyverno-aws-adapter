@@ -20,12 +20,6 @@ eksCluster:
   # -- EKS cluster region
   region:
 
-registryConfig:
-  # -- Username to pull the private image (ghcr.io)
-  username:
-  # -- Password to pull the private image (ghcr.io)
-  password:
-
 rbac:
   # -- Enable RBAC resources creation
   create: true
@@ -41,3 +35,5 @@ image:
   pullPolicy: Always
   # -- Image tag (defaults to chart app version)
   tag:
+  # -- Image pull secrets
+  imagePullSecrets: []
