@@ -186,7 +186,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		for _, v := range x.Nodegroups {
 			if y, err := svc.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
 				objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
-				launchTemplate := &securityv1alpha1.EC2LaunchTemplate{}
+				var launchTemplate *securityv1alpha1.EC2LaunchTemplate
 				if y.Nodegroup.LaunchTemplate != nil {
 					launchTemplate = &securityv1alpha1.EC2LaunchTemplate{
 						ID:      y.Nodegroup.LaunchTemplate.Id,
@@ -219,11 +219,14 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					})
 				}
 
-				remoteAccessConfig := &securityv1alpha1.EKSNodeGroupRemoteAccessConfig{}
+				var remoteAccessConfig *securityv1alpha1.EKSNodeGroupRemoteAccessConfig
 				if y.Nodegroup.RemoteAccess != nil {
-					remoteAccessConfig.Ec2SshKey = y.Nodegroup.RemoteAccess.Ec2SshKey
-					remoteAccessConfig.SourceSecurityGroups = y.Nodegroup.RemoteAccess.SourceSecurityGroups
+					remoteAccessConfig = &securityv1alpha1.EKSNodeGroupRemoteAccessConfig{
+						Ec2SshKey:            y.Nodegroup.RemoteAccess.Ec2SshKey,
+						SourceSecurityGroups: y.Nodegroup.RemoteAccess.SourceSecurityGroups,
+					}
 				}
+
 				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
 					Name: v,
 					ScalingConfig: &securityv1alpha1.EKSNodeGroupScalingConfig{
