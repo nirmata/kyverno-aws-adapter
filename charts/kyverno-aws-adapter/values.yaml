@@ -20,12 +20,6 @@ eksCluster:
   # -- EKS cluster region
   region:
 
-registryConfig:
-  # -- Username to pull the private image (ghcr.io)
-  username:
-  # -- Password to pull the private image (ghcr.io)
-  password:
-
 rbac:
   # -- Enable RBAC resources creation
   create: true
