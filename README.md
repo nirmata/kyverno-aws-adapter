@@ -11,7 +11,6 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 2. Install the Helm Chart and verify that the Adapter works as expected. Follow instructions given [here](/charts/kyverno-aws-adapter#installation)
 
-
 ## IAM Role for Service Account
 This adapter utilizes the ARN of a user-defined IAM Role associated with any policy that has `Full: List, Read` permissions for the `EKS` service, including the following:
 
