@@ -8,7 +8,7 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
 1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
-2. Install the Helm Chart. Follow instructions given [here](https://github.com/nirmata/kyverno-aws-adapter/tree/main/charts/kyverno-aws-adapter#installation).
+2. Install the Helm Chart. Follow instructions given [here](/charts/kyverno-aws-adapter#installation).
 3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `kyverno-aws-adapter`, then:
    ```sh
    kubectl get awsacfg eks-test-config -n kyverno-aws-adapter -o yaml

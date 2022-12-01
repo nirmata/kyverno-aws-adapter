@@ -26,7 +26,6 @@ helm repo update kyverno-aws-adapter
    ```sh
    helm install kyverno-aws-adapter kyverno-aws-adapter/kyverno-aws-adapter
    ```
-   Note: For pre-release versions you will need to provide `--devel`
 4. Check the `status` field of the `<cluster-name>` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `kyverno-aws-adapter`, then:
    ```sh
    kubectl get awsacfg eks-test -n kyverno-aws-adapter -o yaml
