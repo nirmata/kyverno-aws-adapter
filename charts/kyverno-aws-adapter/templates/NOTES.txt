@@ -5,4 +5,4 @@ Thank you for installing {{ .Chart.Name }} ! Your release is named {{ .Release.N
 
 You can check the status of your configuration with:
 
-    kubectl get awsacfg -n {{ .Release.Namespace }} {{ include "kyverno-aws-adapter.fullname" . }} -o yaml
+    kubectl get awsacfg -n {{ .Release.Namespace }} {{ template "kyverno-aws-adapter.fullname" . }} -o yaml
