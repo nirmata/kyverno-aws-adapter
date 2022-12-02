@@ -12,7 +12,7 @@ Check out the [getting_started.md](docs/getting_started.md) guide for installing
 You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
-1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
 2. Install the Helm Chart. Follow instructions given [here](/charts/kyverno-aws-adapter#installation).
 3. Check the `status` field of the `<cluster-name>-config` custom resource in the namespace specified in `values.yaml`. For instance, if the cluster name is `eks-test` and namespace is `kyverno-aws-adapter`, then:
    ```sh
@@ -56,7 +56,7 @@ Please ensure that the trust relationship policy for your IAM role resembles the
       "Condition": {
         "StringEquals": {
           "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:aud": "sts.amazonaws.com",
-          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:sub": "system:serviceaccount:$namespace:<service_account>"
+          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:sub": "system:serviceaccount:<namespace>:<service_account>"
         }
       }
     }

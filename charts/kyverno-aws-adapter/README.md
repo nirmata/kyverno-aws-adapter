@@ -14,7 +14,7 @@ You’ll need an [EKS](https://aws.amazon.com/eks/) cluster to run against.
 
 ### Running on the EKS cluster
 
-1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) `kyverno-aws-adapter-sa` in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
+1. Make sure that you have configured an [IAM role for the service account](#IAM-Role-for-Service-Account) in your desired namespace (configured in `values.yaml`) and specified the role's ARN in the `roleArn` field inside `values.yaml` file.
 
 2. Add the Kyverno AWS Adapter Helm repository.
     ```console
@@ -87,7 +87,7 @@ Please ensure that the trust relationship policy for your IAM role resembles the
       "Condition": {
         "StringEquals": {
           "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:aud": "sts.amazonaws.com",
-          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:sub": "system:serviceaccount:$namespace:<service_account>"
+          "oidc.eks.<region>.amazonaws.com/id/<oidc_provider_id>:sub": "system:serviceaccount:<namespace>:<service_account>"
         }
       }
     }
