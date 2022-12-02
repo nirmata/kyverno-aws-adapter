@@ -14,7 +14,7 @@ There are a few steps we need to follow before installing the Helm chart.
 ### Creating the IAM Policy
 To fetch the EKS Cluster configuration, the AWS Adapter needs the below permissions that has to be expressed via an IAM Policy
 
-``bash
+```bash
 cat >my-policy.json <<EOF
 {
     "Version": "2012-10-17",
@@ -39,11 +39,11 @@ cat >my-policy.json <<EOF
                 "eks:ListUpdates"
             ],
             "Resource": [
-                "arn:aws:eks:*:844333597536:identityproviderconfig/*/*/*/*",
-                "arn:aws:eks:*:844333597536:fargateprofile/*/*/*",
-                "arn:aws:eks:*:844333597536:nodegroup/*/*/*",
-                "arn:aws:eks:*:844333597536:cluster/*",
-                "arn:aws:eks:*:844333597536:addon/*/*/*"
+                "arn:aws:eks:*:111122223333:identityproviderconfig/*/*/*/*",
+                "arn:aws:eks:*:111122223333:fargateprofile/*/*/*",
+                "arn:aws:eks:*:111122223333:nodegroup/*/*/*",
+                "arn:aws:eks:*:111122223333:cluster/*",
+                "arn:aws:eks:*:111122223333:addon/*/*/*"
             ]
         }
     ]
@@ -68,25 +68,23 @@ Create an IAM Role that references the policy we created earlier.
 **Note:** We will use `eksctl` in this guide to create the IAM Role. The serviceaccount creation will be done by the Helm chart so that appropriate RBAC is assigned by the chart itself. If you wish to use your own serviceaccount, then make sure all the necessary rolebinding and clusterrolebinding are present.
 
 ```bash
-account_id=$(aws sts get-caller-identity --query "Account" --output text)
-
-eksctl create iamserviceaccount --name nirmata-aws-adapter  --namespace nirmata-aws-adapter --cluster <cluster-name> --role-name nirmata-adapter-role --attach-policy-arn arn:aws:iam::$account_id:policy/kyverno-aws-adapter-policy   --role-only  --approve
+eksctl create iamserviceaccount --name nirmata-aws-adapter  --namespace nirmata-aws-adapter --cluster <cluster-name> --role-name nirmata-adapter-role --attach-policy-arn arn:aws:iam::111122223333:policy/kyverno-aws-adapter-policy   --role-only  --approve
 ```
 
 This will create a new IAM Role that references the policy we created above. This also creates the trust-relationship for us. If you wish to create the IAM Role via the management console or the AWS CLI, make sure to create the trust-relationship so that the AWS Adapter can assume this Role to fetch EKS Cluster details.
 
 
 ### Installing the AWS Adapter Helm chart
-First we need to set the variables that are needed to install the chart. You can either pass the arguments via the command line or set them in a file.
+First we need to set the values that are needed to install the Helm chart. You can either pass them as arguments via the [command line](https://helm.sh/docs/helm/helm_install/#helm-install) or set them in a [values file](https://helm.sh/docs/chart_template_guide/values_files/)
 
-Here is the minimal info that you need to set
+As an example, here are the minimum values that you need to set
 ```bash
-> cat myvalues.yaml
+# cat myvalues.yaml
 eksCluster:
   name: cluster-name
   region: cluster-region
 
-roleArn: arn:aws:iam::account-id:role/nirmata-adapter-role
+roleArn: arn:aws:iam::111122223333:role/nirmata-adapter-role
 
 rbac:
   create: true
