@@ -26,9 +26,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -58,9 +58,31 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	l := log.FromContext(ctx)
 
 	objOld := &securityv1alpha1.AWSAdapterConfig{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
+	err := r.Get(ctx, req.NamespacedName, objOld)
 	if err != nil {
-		l.Error(err, "error occurred while retrieving awsadapterconfig")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	awsacfgFinalizer := "security.nirmata.io/finalizer"
+	if objOld.DeletionTimestamp.IsZero() {
+		if !controllerutil.ContainsFinalizer(objOld, awsacfgFinalizer) {
+			controllerutil.AddFinalizer(objOld, awsacfgFinalizer)
+			l.Info("Adding Finalizer", "finalizer", awsacfgFinalizer)
+			if err := r.Update(ctx, objOld); err != nil {
+				l.Error(err, "error occurred while adding finalizer")
+				return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while adding finalizer", err, &l, time.Now())
+			}
+			return ctrl.Result{}, nil
+		}
+	} else {
+		if controllerutil.ContainsFinalizer(objOld, awsacfgFinalizer) {
+			controllerutil.RemoveFinalizer(objOld, awsacfgFinalizer)
+			l.Info("Removing Finalizer", "finalizer", awsacfgFinalizer)
+			if err := r.Update(ctx, objOld); err != nil {
+				l.Error(err, "error occurred while removing finalizer")
+				return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while removing finalizer", err, &l, time.Now())
+			}
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -291,6 +313,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		Timestamp: &metav1.Time{Time: currentPollTimestamp},
 		Status:    PollSuccess,
 	}
+
 	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
 		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
