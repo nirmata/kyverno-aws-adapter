@@ -18,9 +18,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.id
-      name: Cluster Id
-      type: string
     - jsonPath: .spec.name
       name: Cluster Name
       type: string
@@ -28,20 +25,11 @@ spec:
       name: Region
       type: string
     - jsonPath: .status.eksCluster.status
-      name: Status
+      name: Cluster Status
       type: string
     - jsonPath: .status.eksCluster.kubernetesVersion
       name: Kubernetes Version
       type: string
-    - jsonPath: .status.eksCluster.platformVersion
-      name: Platform Version
-      type: string
-    - jsonPath: .status.lastUpdatedTimestamp
-      name: Last Updated
-      type: date
-    - jsonPath: .status.lastPollInfo.timestamp
-      name: Last Polled
-      type: date
     - jsonPath: .status.lastPollInfo.status
       name: Last Polled Status
       type: string
