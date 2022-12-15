@@ -26,7 +26,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -58,9 +57,16 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	l := log.FromContext(ctx)
 
 	objOld := &securityv1alpha1.AWSAdapterConfig{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
+	err := r.Get(ctx, req.NamespacedName, objOld)
 	if err != nil {
-		l.Error(err, "error occurred while retrieving awsadapterconfig")
+		if client.IgnoreNotFound(err) == nil {
+			l.Info("Warning: Resource deleted or does not exist")
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if !objOld.DeletionTimestamp.IsZero() {
+		l.Info("Warning: Deleting resource. Hope this is done intentionally.")
 		return ctrl.Result{}, nil
 	}
 
@@ -291,6 +297,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		Timestamp: &metav1.Time{Time: currentPollTimestamp},
 		Status:    PollSuccess,
 	}
+
 	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
 		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
