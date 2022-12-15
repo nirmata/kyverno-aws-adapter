@@ -60,13 +60,13 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	err := r.Get(ctx, req.NamespacedName, objOld)
 	if err != nil {
 		if client.IgnoreNotFound(err) == nil {
-			l.Info("WARNING: Resource deleted or does not exist")
+			l.Info("Warning: Resource deleted or does not exist")
 		}
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	if !objOld.DeletionTimestamp.IsZero() {
-		l.Info("Deleting resource")
+		l.Info("Warning: Deleting resource. Hope this is done intentionally.")
 		return ctrl.Result{}, nil
 	}
 
