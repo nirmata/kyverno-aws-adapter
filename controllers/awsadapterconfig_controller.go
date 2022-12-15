@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -63,26 +62,8 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	awsacfgFinalizer := "security.nirmata.io/finalizer"
-	if objOld.DeletionTimestamp.IsZero() {
-		if !controllerutil.ContainsFinalizer(objOld, awsacfgFinalizer) {
-			controllerutil.AddFinalizer(objOld, awsacfgFinalizer)
-			l.Info("Adding Finalizer", "finalizer", awsacfgFinalizer)
-			if err := r.Update(ctx, objOld); err != nil {
-				l.Error(err, "error occurred while adding finalizer")
-				return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while adding finalizer", err, &l, time.Now())
-			}
-			return ctrl.Result{}, nil
-		}
-	} else {
-		if controllerutil.ContainsFinalizer(objOld, awsacfgFinalizer) {
-			controllerutil.RemoveFinalizer(objOld, awsacfgFinalizer)
-			l.Info("Removing Finalizer", "finalizer", awsacfgFinalizer)
-			if err := r.Update(ctx, objOld); err != nil {
-				l.Error(err, "error occurred while removing finalizer")
-				return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while removing finalizer", err, &l, time.Now())
-			}
-		}
+	if !objOld.DeletionTimestamp.IsZero() {
+		l.Info("Deleting AWSAdapterConfig")
 		return ctrl.Result{}, nil
 	}
 
