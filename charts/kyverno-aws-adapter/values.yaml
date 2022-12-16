@@ -15,9 +15,9 @@ roleArn:
 pollInterval: 30
 
 eksCluster:
-  # -- EKS cluster name
+  # -- EKS cluster name (REQUIRED)
   name:
-  # -- EKS cluster region
+  # -- EKS cluster region (REQUIRED)
   region:
 
 rbac:

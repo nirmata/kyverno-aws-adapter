@@ -45,9 +45,7 @@ metadata:
   labels:
     {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
   annotations:
-  {{- if .Values.roleArn }}
-    eks.amazonaws.com/role-arn: {{ .Values.roleArn }}
-  {{- end }}
+    eks.amazonaws.com/role-arn: {{ required "Role ARN is required" .Values.roleArn }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
