@@ -2,6 +2,26 @@ apiVersion: v1
 entries:
   kyverno-aws-adapter:
   - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2022-12-16T08:04:17.502233968Z"
+    description: Helm chart for the Kyverno AWS Adapter
+    digest: aed47c83ad03ce7e847ee78c8a3fff3cf61a492820c887cff4830a41dd768aa6
+    keywords:
+    - kubernetes
+    - nirmata
+    - kyverno
+    - aws
+    - adapter
+    - policy
+    maintainers:
+    - name: Nirmata
+      url: https://nirmata.com/
+    name: kyverno-aws-adapter
+    type: application
+    urls:
+    - https://github.com/nirmata/kyverno-aws-adapter/releases/download/kyverno-aws-adapter-v0.1.0/kyverno-aws-adapter-v0.1.0.tgz
+    version: v0.1.0
+  - apiVersion: v2
     appVersion: v0.0.2
     created: "2022-12-01T20:02:05.597841918Z"
     description: Helm chart for the Kyverno AWS Adapter
@@ -81,4 +101,4 @@ entries:
     urls:
     - https://github.com/nirmata/kyverno-aws-adapter/releases/download/kyverno-aws-adapter-v0.0.1-alpha.4/kyverno-aws-adapter-v0.0.1-alpha.4.tgz
     version: v0.0.1-alpha.4
-generated: "2022-12-01T20:02:05.597858318Z"
+generated: "2022-12-16T08:04:17.502256368Z"
