@@ -191,14 +191,10 @@ type AWSAdapterConfigStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:resource:shortName="awsacfg"
 //+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="Cluster Id",type=string,JSONPath=`.status.id`
 //+kubebuilder:printcolumn:name="Cluster Name",type=string,JSONPath=`.spec.name`
 //+kubebuilder:printcolumn:name="Region",type=string,JSONPath=`.spec.region`
-//+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.eksCluster.status`
+//+kubebuilder:printcolumn:name="Cluster Status",type=string,JSONPath=`.status.eksCluster.status`
 //+kubebuilder:printcolumn:name="Kubernetes Version",type=string,JSONPath=`.status.eksCluster.kubernetesVersion`
-//+kubebuilder:printcolumn:name="Platform Version",type=string,JSONPath=`.status.eksCluster.platformVersion`
-//+kubebuilder:printcolumn:name="Last Updated",type=date,JSONPath=`.status.lastUpdatedTimestamp`
-//+kubebuilder:printcolumn:name="Last Polled",type=date,JSONPath=`.status.lastPollInfo.timestamp`
 //+kubebuilder:printcolumn:name="Last Polled Status",type=string,JSONPath=`.status.lastPollInfo.status`
 
 // AWSAdapterConfig is the Schema for the awsadapterconfigs API
