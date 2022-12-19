@@ -3,10 +3,10 @@
 This is a guide on how to get started with the Nirmata Kyverno Adapter for AWS. To learn more about Kyverno, check out the official documentation.
 
 ## Prerequisites
-- a running EKS Cluster (refer [Creating an Amazon EKS Cluster](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html))
-- AWS CLI (refer [Installing the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
-- eksctl (refer [Installing eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html))
-- Helm CLI (refer [Installing Helm](https://helm.sh/docs/intro/install/))
+- a running EKS Cluster (refer to [Creating an Amazon EKS Cluster](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html))
+- AWS CLI (refer to [Installing the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- eksctl (refer to [Installing eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html))
+- Helm CLI (refer to [Installing Helm](https://helm.sh/docs/intro/install/))
 
 ## Installing the Nirmata Kyverno Adapter for AWS
 There are a few steps we need to follow before installing the Helm chart.
@@ -102,10 +102,31 @@ Now let's install the Helm chart
 helm repo add nirmata-kyverno-aws-adapter https://nirmata.github.io/kyverno-aws-adapter/
 helm repo update nirmata-kyverno-aws-adapter
 
-helm install kyverno-aws-adapter nirmata-kyverno-aws-adapter/kyverno-aws-adapter -f myvalues.yaml --devel --namespace nirmata-aws-adapter
+helm install kyverno-aws-adapter nirmata-kyverno-aws-adapter/kyverno-aws-adapter -f myvalues.yaml --namespace nirmata-aws-adapter
 ```
 
-**Note:** We are using --devel argument in the above helm install command to include pre-releases. We should be using only stable releases in production. We will drop this command from the guide once we have a stable version released.
+If everything goes well, you should an output similar to this
+
+```
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "nirmata-kyverno-aws-adapter" chart repository
+Update Complete. ⎈Happy Helming!⎈
+NAME: kyverno-aws-adapter
+LAST DEPLOYED: Fri Dec 16 22:01:35 2022
+NAMESPACE: nirmata-aws-adapter
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Chart version: v0.1.0
+Kyverno-aws-adapter version: v0.1.0
+
+Thank you for installing kyverno-aws-adapter ! Your release is named kyverno-aws-adapter.
+
+You can check the status of your configuration with:
+
+    kubectl get awsacfg -n nirmata-aws-adapter kyverno-aws-adapter -o yaml
+```
 
 ### Verifying the AWS Adapter installation
 Perform the below steps to see if the adapter is installed correctly
