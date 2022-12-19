@@ -38,14 +38,10 @@ spec:
         description: AWSAdapterConfig is the Schema for the awsadapterconfigs API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation 
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -100,8 +96,7 @@ spec:
                               type: integer
                             healthIssues:
                               items:
-                                description: EKSNodeGroupHealthIssue contains info of any health issue in
-                                  the EKS cluster's node group
+                                description: EKSNodeGroupHealthIssue contains info of any health issue in the EKS cluster's node group
                                 properties:
                                   code:
                                     type: string
@@ -122,8 +117,7 @@ spec:
                                 type: string
                               type: object
                             launchTemplate:
-                              description: EC2LaunchTemplate contains launch template info the EKS cluster's
-                                node group
+                              description: EC2LaunchTemplate contains launch template info the EKS cluster's node group
                               properties:
                                 id:
                                   type: string
@@ -139,8 +133,7 @@ spec:
                             nodeRole:
                               type: string
                             remoteAccessConfig:
-                              description: EKSNodeGroupRemoteAccessConfig contains remote access configuration of
-                                the EKS cluster's node group
+                              description: EKSNodeGroupRemoteAccessConfig contains remote access configuration of the EKS cluster's node group
                               properties:
                                 ec2SSHKey:
                                   type: string
@@ -150,8 +143,7 @@ spec:
                                   type: array
                               type: object
                             resources:
-                              description: EKSNodeGroupResources contains info of ASG and remote access
-                                SG for node group
+                              description: EKSNodeGroupResources contains info of ASG and remote access SG for node group
                               properties:
                                 autoScalingGroups:
                                   items:
@@ -161,8 +153,7 @@ spec:
                                   type: string
                               type: object
                             scalingConfig:
-                              description: EKSNodeGroupScalingConfig contains scaling configuration of the
-                                EKS cluster's node group
+                              description: EKSNodeGroupScalingConfig contains scaling configuration of  the EKS cluster's node group
                               properties:
                                 desiredSize:
                                   format: int32
@@ -186,8 +177,7 @@ spec:
                               type: object
                             taints:
                               items:
-                                description: EKSNodeGroupTaint contains info of taints in the EKS cluster's
-                                  node group
+                                description: EKSNodeGroupTaint contains info of taints in the EKS cluster's node group
                                 properties:
                                   effect:
                                     type: string
@@ -198,8 +188,7 @@ spec:
                                 type: object
                               type: array
                             updateConfig:
-                              description: EKSNodeGroupUpdateConfig contains number/percentage of node groups
-                                that can be updated in parallel
+                              description: EKSNodeGroupUpdateConfig contains number/percentage of node groups that can be updated in parallel
                               properties:
                                 maxUnavailable:
                                   format: int32
@@ -308,8 +297,7 @@ spec:
                 description: Information on when the adapter last tried to fetch the EKS cluster details
                 properties:
                   failure:
-                    description: PollFailure contains the Error and relevant Message if got Failure
-                      in last poll
+                    description: PollFailure contains the Error and relevant Message if got Failure in last poll
                     properties:
                       error:
                         type: string
