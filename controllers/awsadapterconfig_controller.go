@@ -31,7 +31,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go/aws"
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
@@ -84,20 +87,20 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
 	}
 	l.Info("AWS SDK config loaded successfully")
-	svc := eks.NewFromConfig(cfg)
+	eksClient := eks.NewFromConfig(cfg)
+	ec2Client := ec2.NewFromConfig(cfg)
 
 	objNew := objOld.DeepCopy()
 	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
 
 	clusterFound := false
-
-	if x, err := svc.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
+	if x, err := eksClient.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
 		if x.NextToken != nil {
 			l.Info("Warning: more than 100 clusters found in the AWS account, fetching only 100")
 		}
 
 		for _, v := range x.Clusters {
-			if c, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: &v}); err == nil {
+			if c, err := eksClient.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: &v}); err == nil {
 				if v == *objOld.Spec.Name && strings.ToLower(string(c.Cluster.Status)) != "deleting" {
 					clusterFound = true
 					break
@@ -119,7 +122,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, fmt.Sprintf("could not find cluster '%s' in the given region '%s'", *objOld.Spec.Name, *objOld.Spec.Region), fmt.Errorf("cluster not found"), &l, time.Now())
 	}
 
-	if x, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
 		tmpEncConf := []*securityv1alpha1.EKSEncryptionConfig{}
 		for _, encConf := range x.Cluster.EncryptionConfig {
 			tmpEncConf = append(tmpEncConf, &securityv1alpha1.EKSEncryptionConfig{
@@ -181,16 +184,16 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error fetching cluster details", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListFargateProfiles(context.TODO(), &eks.ListFargateProfilesInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListFargateProfiles(context.TODO(), &eks.ListFargateProfilesInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Compute.FargateProfiles = x.FargateProfileNames
 	} else {
 		l.Error(err, "error listing fargate profiles")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing fargate profiles", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		for _, v := range x.Nodegroups {
-			if y, err := svc.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
+			if y, err := eksClient.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
 				objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
 				var launchTemplate *securityv1alpha1.EC2LaunchTemplate
 				if y.Nodegroup.LaunchTemplate != nil {
@@ -275,14 +278,14 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing nodegroups", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListAddons(context.TODO(), &eks.ListAddonsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListAddons(context.TODO(), &eks.ListAddonsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Addons = x.Addons
 	} else {
 		l.Error(err, "error listing addons")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing addons", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListIdentityProviderConfigs(context.TODO(), &eks.ListIdentityProviderConfigsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListIdentityProviderConfigs(context.TODO(), &eks.ListIdentityProviderConfigsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.IdentityProviderConfigs = []*string{}
 		for _, v := range x.IdentityProviderConfigs {
 			objNew.Status.EKSCluster.IdentityProviderConfigs = append(objNew.Status.EKSCluster.IdentityProviderConfigs, v.Name)
@@ -304,6 +307,37 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			l.Error(err, "error updating status")
 		}
 	}
+
+	if x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{
+				Name: aws.String("tag:aws:eks:cluster-name"),
+				Values: []string{
+					*objOld.Spec.Name,
+				},
+			},
+		},
+	},
+	); err != nil {
+		for _, r := range x.Reservations {
+			tmpRes := []*securityv1alpha1.Reservation{}
+			for _, i := range r.Instances {
+				tmpIn := []*securityv1alpha1.Instance{}
+				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+					PublicDnsName:           i.PublicDnsName,
+					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+				})
+				tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+					Instances: tmpIn,
+				})
+			}
+			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
+		}
+	} else {
+		l.Error(err, "error occurred while fetching EC2 instances")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
+	}
+
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 

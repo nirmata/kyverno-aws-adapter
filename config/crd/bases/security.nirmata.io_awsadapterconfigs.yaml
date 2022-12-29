@@ -215,6 +215,23 @@ spec:
                               type: object
                           type: object
                         type: array
+                      reservations:
+                        items:
+                          properties:
+                            instances:
+                              items:
+                                properties:
+                                  flowLogs:
+                                    type: boolean
+                                  httpPutResponseHopLimit:
+                                    format: int32
+                                    type: integer
+                                  publicDnsName:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
                     type: object
                   createdAt:
                     type: string

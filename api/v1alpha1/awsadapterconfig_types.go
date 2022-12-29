@@ -63,6 +63,7 @@ type EKSEncryptionConfig struct {
 type EKSCompute struct {
 	NodeGroups      []*EKSNodeGroup `json:"nodeGroups,omitempty"`
 	FargateProfiles []string        `json:"fargateProfiles,omitempty"`
+	Reservations    []*Reservation  `json:"reservations,omitempty"`
 }
 
 // EKSNodeGroup contains info of the EKS cluster's node group
@@ -93,6 +94,16 @@ type EKSNodeGroup struct {
 type EKSNodeGroupUpdateConfig struct {
 	MaxUnavailable           *int32 `json:"maxUnavailable,omitempty"`
 	MaxUnavailablePercentage *int32 `json:"maxUnavailablePercentage,omitempty"`
+}
+
+type Reservation struct {
+	Instances []*Instance `json:"instances,omitempty"`
+}
+
+type Instance struct {
+	HttpPutResponseHopLimit *int32  `json:"httpPutResponseHopLimit,omitempty"`
+	PublicDnsName           *string `json:"publicDnsName,omitempty"`
+	FlowLogs                *bool   `json:"flowLogs,omitempty"`
 }
 
 // EKSNodeGroupResources contains info of ASG and remote access SG for node group
