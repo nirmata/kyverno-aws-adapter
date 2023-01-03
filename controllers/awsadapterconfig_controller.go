@@ -131,36 +131,50 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			})
 		}
 
-		objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{
-			CreatedAt:         x.Cluster.CreatedAt.String(),
-			Endpoint:          x.Cluster.Endpoint,
-			ID:                x.Cluster.Id,
-			Name:              x.Cluster.Name,
-			PlatformVersion:   x.Cluster.PlatformVersion,
-			Region:            objOld.Spec.Region,
-			RoleArn:           x.Cluster.RoleArn,
-			Status:            string(x.Cluster.Status),
-			KubernetesVersion: x.Cluster.Version,
-			Arn:               x.Cluster.Arn,
-			Certificate:       x.Cluster.CertificateAuthority.Data,
-			EncryptionConfig:  tmpEncConf,
-			Networking: &securityv1alpha1.EKSNetworking{
-				VPC: &securityv1alpha1.EKSVpcConfig{
-					ClusterSecurityGroupID: x.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
-					EndpointPrivateAccess:  x.Cluster.ResourcesVpcConfig.EndpointPrivateAccess,
-					EndpointPublicAccess:   x.Cluster.ResourcesVpcConfig.EndpointPublicAccess,
-					PublicAccessCIDRs:      x.Cluster.ResourcesVpcConfig.PublicAccessCidrs,
-					SecurityGroupIDs:       x.Cluster.ResourcesVpcConfig.SecurityGroupIds,
-					SubnetIDs:              x.Cluster.ResourcesVpcConfig.SubnetIds,
-					VpcID:                  x.Cluster.ResourcesVpcConfig.VpcId,
+		if describeFlowLogsOutput, err := ec2Client.DescribeFlowLogs(context.TODO(), &ec2.DescribeFlowLogsInput{Filter: []types.Filter{
+			{
+				Name: aws.String("resource-id"),
+				Values: []string{
+					*x.Cluster.ResourcesVpcConfig.VpcId,
 				},
-				ServiceIPv4CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
-				ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
-				IPFamily:        string(x.Cluster.KubernetesNetworkConfig.IpFamily),
 			},
-			Compute: &securityv1alpha1.EKSCompute{},
-			Logging: &securityv1alpha1.EKSLogging{},
-			Tags:    x.Cluster.Tags,
+		}}); err == nil {
+			objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{
+				CreatedAt:         x.Cluster.CreatedAt.String(),
+				Endpoint:          x.Cluster.Endpoint,
+				ID:                x.Cluster.Id,
+				Name:              x.Cluster.Name,
+				PlatformVersion:   x.Cluster.PlatformVersion,
+				Region:            objOld.Spec.Region,
+				RoleArn:           x.Cluster.RoleArn,
+				Status:            string(x.Cluster.Status),
+				KubernetesVersion: x.Cluster.Version,
+				Arn:               x.Cluster.Arn,
+				Certificate:       x.Cluster.CertificateAuthority.Data,
+				EncryptionConfig:  tmpEncConf,
+				Networking: &securityv1alpha1.EKSNetworking{
+					VPC: &securityv1alpha1.EKSVpcConfig{
+						ClusterSecurityGroupID: x.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
+						EndpointPrivateAccess:  x.Cluster.ResourcesVpcConfig.EndpointPrivateAccess,
+						EndpointPublicAccess:   x.Cluster.ResourcesVpcConfig.EndpointPublicAccess,
+						PublicAccessCIDRs:      x.Cluster.ResourcesVpcConfig.PublicAccessCidrs,
+						SecurityGroupIDs:       x.Cluster.ResourcesVpcConfig.SecurityGroupIds,
+						SubnetIDs:              x.Cluster.ResourcesVpcConfig.SubnetIds,
+						VpcID:                  x.Cluster.ResourcesVpcConfig.VpcId,
+						FlowLogsEnabled:        len(describeFlowLogsOutput.FlowLogs) != 0,
+					},
+					ServiceIPv4CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+					ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+					IPFamily:        string(x.Cluster.KubernetesNetworkConfig.IpFamily),
+				},
+				Compute: &securityv1alpha1.EKSCompute{},
+				Logging: &securityv1alpha1.EKSLogging{},
+				Tags:    x.Cluster.Tags,
+			}
+		} else {
+			msg := "error occurred while fetching VPC flow logs"
+			l.Error(err, msg)
+			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
 		}
 
 		for _, v := range x.Cluster.Logging.ClusterLogging {
@@ -295,19 +309,6 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing identity provider configs", err, &l, time.Now())
 	}
 
-	currentPollTimestamp := time.Now()
-	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
-		Timestamp: &metav1.Time{Time: currentPollTimestamp},
-		Status:    PollSuccess,
-	}
-
-	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
-		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
-		if err := r.Status().Update(ctx, objNew); err != nil {
-			l.Error(err, "error updating status")
-		}
-	}
-
 	if x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
 		Filters: []types.Filter{
 			{
@@ -318,7 +319,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			},
 		},
 	},
-	); err != nil {
+	); err == nil {
 		for _, r := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
 			for _, i := range r.Instances {
@@ -336,6 +337,19 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	} else {
 		l.Error(err, "error occurred while fetching EC2 instances")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
+	}
+
+	currentPollTimestamp := time.Now()
+	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
+		Timestamp: &metav1.Time{Time: currentPollTimestamp},
+		Status:    PollSuccess,
+	}
+
+	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
+		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
+		if err := r.Status().Update(ctx, objNew); err != nil {
+			l.Error(err, "error updating status")
+		}
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil

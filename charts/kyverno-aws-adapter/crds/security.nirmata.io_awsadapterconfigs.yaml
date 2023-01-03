@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -38,10 +39,14 @@ spec:
         description: AWSAdapterConfig is the Schema for the awsadapterconfigs API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -62,7 +67,8 @@ spec:
             description: AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
             properties:
               eksCluster:
-                description: 'EKS cluster details fetched from AWS For details of individual fields, refer to AWS SDK docs: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/eks@v1.22.1/types#Cluster'
+                description: 'EKS cluster details fetched from AWS For details of
+                  individual fields, refer to AWS SDK docs: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/eks@v1.22.1/types#Cluster'
                 properties:
                   addons:
                     items:
@@ -73,7 +79,8 @@ spec:
                   certificate:
                     type: string
                   compute:
-                    description: EKSCompute contains node groups and fargate profiles of the EKS cluster
+                    description: EKSCompute contains node groups and fargate profiles
+                      of the EKS cluster
                     properties:
                       fargateProfiles:
                         items:
@@ -81,7 +88,8 @@ spec:
                         type: array
                       nodeGroups:
                         items:
-                          description: EKSNodeGroup contains info of the EKS cluster's node group
+                          description: EKSNodeGroup contains info of the EKS cluster's
+                            node group
                           properties:
                             amiReleaseVersion:
                               type: string
@@ -96,7 +104,8 @@ spec:
                               type: integer
                             healthIssues:
                               items:
-                                description: EKSNodeGroupHealthIssue contains info of any health issue in the EKS cluster's node group
+                                description: EKSNodeGroupHealthIssue contains info
+                                  of any health issue in the EKS cluster's node group
                                 properties:
                                   code:
                                     type: string
@@ -117,7 +126,8 @@ spec:
                                 type: string
                               type: object
                             launchTemplate:
-                              description: EC2LaunchTemplate contains launch template info the EKS cluster's node group
+                              description: EC2LaunchTemplate contains launch template
+                                info the EKS cluster's node group
                               properties:
                                 id:
                                   type: string
@@ -133,7 +143,9 @@ spec:
                             nodeRole:
                               type: string
                             remoteAccessConfig:
-                              description: EKSNodeGroupRemoteAccessConfig contains remote access configuration of the EKS cluster's node group
+                              description: EKSNodeGroupRemoteAccessConfig contains
+                                remote access configuration of the EKS cluster's node
+                                group
                               properties:
                                 ec2SSHKey:
                                   type: string
@@ -143,7 +155,8 @@ spec:
                                   type: array
                               type: object
                             resources:
-                              description: EKSNodeGroupResources contains info of ASG and remote access SG for node group
+                              description: EKSNodeGroupResources contains info of
+                                ASG and remote access SG for node group
                               properties:
                                 autoScalingGroups:
                                   items:
@@ -153,7 +166,8 @@ spec:
                                   type: string
                               type: object
                             scalingConfig:
-                              description: EKSNodeGroupScalingConfig contains scaling configuration of  the EKS cluster's node group
+                              description: EKSNodeGroupScalingConfig contains scaling
+                                configuration of  the EKS cluster's node group
                               properties:
                                 desiredSize:
                                   format: int32
@@ -177,7 +191,8 @@ spec:
                               type: object
                             taints:
                               items:
-                                description: EKSNodeGroupTaint contains info of taints in the EKS cluster's node group
+                                description: EKSNodeGroupTaint contains info of taints
+                                  in the EKS cluster's node group
                                 properties:
                                   effect:
                                     type: string
@@ -188,7 +203,8 @@ spec:
                                 type: object
                               type: array
                             updateConfig:
-                              description: EKSNodeGroupUpdateConfig contains number/percentage of node groups that can be updated in parallel
+                              description: EKSNodeGroupUpdateConfig contains number/percentage
+                                of node groups that can be updated in parallel
                               properties:
                                 maxUnavailable:
                                   format: int32
@@ -199,12 +215,28 @@ spec:
                               type: object
                           type: object
                         type: array
+                      reservations:
+                        items:
+                          properties:
+                            instances:
+                              items:
+                                properties:
+                                  httpPutResponseHopLimit:
+                                    format: int32
+                                    type: integer
+                                  publicDnsName:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
                     type: object
                   createdAt:
                     type: string
                   encryptionConfig:
                     items:
-                      description: EKSEncryptionConfig contains encryption configuration of the EKS cluster
+                      description: EKSEncryptionConfig contains encryption configuration
+                        of the EKS cluster
                       properties:
                         keyARN:
                           type: string
@@ -241,7 +273,8 @@ spec:
                   name:
                     type: string
                   networking:
-                    description: EKSNetworking contains networking configuration of the EKS cluster
+                    description: EKSNetworking contains networking configuration of
+                      the EKS cluster
                     properties:
                       ipFamily:
                         type: string
@@ -250,13 +283,16 @@ spec:
                       serviceIPv6CIDR:
                         type: string
                       vpc:
-                        description: EKSVpcConfig contains VPC configuration of the EKS cluster
+                        description: EKSVpcConfig contains VPC configuration of the
+                          EKS cluster
                         properties:
                           clusterSecurityGroupID:
                             type: string
                           endpointPrivateAccess:
                             type: boolean
                           endpointPublicAccess:
+                            type: boolean
+                          flowLogsEnabled:
                             type: boolean
                           publicAccessCIDRs:
                             items:
@@ -294,10 +330,12 @@ spec:
                 - status
                 type: object
               lastPollInfo:
-                description: Information on when the adapter last tried to fetch the EKS cluster details
+                description: Information on when the adapter last tried to fetch the
+                  EKS cluster details
                 properties:
                   failure:
-                    description: PollFailure contains the Error and relevant Message if got Failure in last poll
+                    description: PollFailure contains the Error and relevant Message
+                      if got Failure in last poll
                     properties:
                       error:
                         type: string

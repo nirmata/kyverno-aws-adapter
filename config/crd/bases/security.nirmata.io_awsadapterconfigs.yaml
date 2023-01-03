@@ -221,8 +221,6 @@ spec:
                             instances:
                               items:
                                 properties:
-                                  flowLogs:
-                                    type: boolean
                                   httpPutResponseHopLimit:
                                     format: int32
                                     type: integer
@@ -293,6 +291,8 @@ spec:
                           endpointPrivateAccess:
                             type: boolean
                           endpointPublicAccess:
+                            type: boolean
+                          flowLogsEnabled:
                             type: boolean
                           publicAccessCIDRs:
                             items:

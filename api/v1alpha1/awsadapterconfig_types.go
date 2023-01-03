@@ -103,7 +103,6 @@ type Reservation struct {
 type Instance struct {
 	HttpPutResponseHopLimit *int32  `json:"httpPutResponseHopLimit,omitempty"`
 	PublicDnsName           *string `json:"publicDnsName,omitempty"`
-	FlowLogs                *bool   `json:"flowLogs,omitempty"`
 }
 
 // EKSNodeGroupResources contains info of ASG and remote access SG for node group
@@ -155,6 +154,7 @@ type EKSVpcConfig struct {
 	SecurityGroupIDs       []string `json:"securityGroupIDs,omitempty"`
 	SubnetIDs              []string `json:"subnetIDs,omitempty"`
 	VpcID                  *string  `json:"vpcID,omitempty"`
+	FlowLogsEnabled        bool     `json:"flowLogsEnabled,omitempty"`
 }
 
 // EKSNetworking contains networking configuration of the EKS cluster
