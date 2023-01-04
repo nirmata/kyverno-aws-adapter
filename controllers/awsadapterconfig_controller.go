@@ -33,7 +33,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecrTypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2Types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go/aws"
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
@@ -73,7 +78,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	if objOld.Status != (securityv1alpha1.AWSAdapterConfigStatus{}) {
+	if !isStatusVacuous(&objOld.Status) {
 		if metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
 			return ctrl.Result{}, nil
 		}
@@ -87,13 +92,37 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
 	}
 	l.Info("AWS SDK config loaded successfully")
-	eksClient := eks.NewFromConfig(cfg)
+
+	stsClient := sts.NewFromConfig(cfg)
 	ec2Client := ec2.NewFromConfig(cfg)
+	ecrClient := ecr.NewFromConfig(cfg)
+	eksClient := eks.NewFromConfig(cfg)
+	inspector2Client := inspector2.NewFromConfig(cfg)
 
 	objNew := objOld.DeepCopy()
 	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
+	objNew.Status.AccountData = &securityv1alpha1.AccountData{}
 
 	clusterFound := false
+
+	if callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{}); err == nil && callerIdentity.Account != nil {
+		objNew.Status.AccountData.ID = callerIdentity.Account
+
+		x, err := inspector2Client.BatchGetAccountStatus(ctx, &inspector2.BatchGetAccountStatusInput{AccountIds: []string{*callerIdentity.Account}})
+		if err == nil {
+			objNew.Status.AccountData.InspectorEnabledEC2 = aws.Bool(x.Accounts[0].ResourceState.Ec2.Status == inspector2Types.StatusEnabled)
+			objNew.Status.AccountData.InspectorEnabledECR = aws.Bool(x.Accounts[0].ResourceState.Ecr.Status == inspector2Types.StatusEnabled)
+		} else {
+			msg := "error occurred while fetching inspector data"
+			l.Error(err, msg)
+			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+		}
+	} else {
+		msg := "error occurred while fetching account id"
+		l.Error(err, msg)
+		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	}
+
 	if x, err := eksClient.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
 		if x.NextToken != nil {
 			l.Info("Warning: more than 100 clusters found in the AWS account, fetching only 100")
@@ -161,7 +190,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 						SecurityGroupIDs:       x.Cluster.ResourcesVpcConfig.SecurityGroupIds,
 						SubnetIDs:              x.Cluster.ResourcesVpcConfig.SubnetIds,
 						VpcID:                  x.Cluster.ResourcesVpcConfig.VpcId,
-						FlowLogsEnabled:        len(describeFlowLogsOutput.FlowLogs) != 0,
+						FlowLogsEnabled:        aws.Bool(len(describeFlowLogsOutput.FlowLogs) != 0),
 					},
 					ServiceIPv4CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
 					ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
@@ -339,6 +368,24 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	}
 
+	if x, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{}); err == nil {
+		repositories := []*securityv1alpha1.ECRRepository{}
+
+		for _, r := range x.Repositories {
+			repositories = append(repositories, &securityv1alpha1.ECRRepository{
+				RepositoryName:  r.RepositoryName,
+				RepositoryUri:   r.RepositoryUri,
+				ImageTagMutable: aws.Bool(r.ImageTagMutability == ecrTypes.ImageTagMutabilityMutable),
+			})
+		}
+
+		objNew.Status.ECRRepositories = repositories
+	} else {
+		msg := "error occurred while fetching ECR repositories data"
+		l.Error(err, msg)
+		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	}
+
 	currentPollTimestamp := time.Now()
 	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
 		Timestamp: &metav1.Time{Time: currentPollTimestamp},
@@ -375,4 +422,12 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+}
+
+func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {
+	return (status.LastUpdatedTimestamp == nil &&
+		status.LastPollInfo == securityv1alpha1.LastPollInfo{} &&
+		status.AccountData == nil &&
+		status.EKSCluster == nil &&
+		(len(status.ECRRepositories) == 0))
 }

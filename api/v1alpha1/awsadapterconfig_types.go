@@ -30,6 +30,13 @@ type AWSAdapterConfigSpec struct {
 	Region *string `json:"region"`
 }
 
+// AccountData contains the AWS Account details
+type AccountData struct {
+	ID                  *string `json:"id,omitempty"`
+	InspectorEnabledEC2 *bool   `json:"inspectorEnabledEC2,omitempty"`
+	InspectorEnabledECR *bool   `json:"inspectorEnabledECR,omitempty"`
+}
+
 // EKSCluster contains the EKS cluster's details
 type EKSCluster struct {
 	ID                      *string                `json:"id,omitempty"`
@@ -51,6 +58,13 @@ type EKSCluster struct {
 	Addons                  []string               `json:"addons,omitempty"`
 	IdentityProviderConfigs []*string              `json:"identityProviderConfigs,omitempty"`
 	Tags                    map[string]string      `json:"tags,omitempty"`
+}
+
+// ECRRepository contains container repository details
+type ECRRepository struct {
+	RepositoryName  *string `json:"repositoryName,omitempty"`
+	RepositoryUri   *string `json:"repositoryUri,omitempty"`
+	ImageTagMutable *bool   `json:"imageTagMutable,omitempty"`
 }
 
 // EKSEncryptionConfig contains encryption configuration of the EKS cluster
@@ -154,7 +168,7 @@ type EKSVpcConfig struct {
 	SecurityGroupIDs       []string `json:"securityGroupIDs,omitempty"`
 	SubnetIDs              []string `json:"subnetIDs,omitempty"`
 	VpcID                  *string  `json:"vpcID,omitempty"`
-	FlowLogsEnabled        bool     `json:"flowLogsEnabled,omitempty"`
+	FlowLogsEnabled        *bool    `json:"flowLogsEnabled,omitempty"`
 }
 
 // EKSNetworking contains networking configuration of the EKS cluster
@@ -193,10 +207,12 @@ type AWSAdapterConfigStatus struct {
 	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
 	// Information on when the adapter last tried to fetch the EKS cluster details
 	LastPollInfo LastPollInfo `json:"lastPollInfo"`
+	AccountData  *AccountData `json:"accountData,omitempty"`
 	// EKS cluster details fetched from AWS
 	// For details of individual fields, refer to AWS SDK docs:
 	// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/eks@v1.22.1/types#Cluster
-	EKSCluster *EKSCluster `json:"eksCluster,omitempty"`
+	EKSCluster      *EKSCluster      `json:"eksCluster,omitempty"`
+	ECRRepositories []*ECRRepository `json:"ecrRepositories,omitempty"`
 }
 
 //+kubebuilder:object:root=true
