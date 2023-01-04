@@ -40,11 +40,11 @@ cat >my-policy.json <<EOF
                 "eks:ListUpdates"
             ],
             "Resource": [
-                "arn:aws:eks:*:844333597536:identityproviderconfig/*/*/*/*",
-                "arn:aws:eks:*:844333597536:fargateprofile/*/*/*",
-                "arn:aws:eks:*:844333597536:nodegroup/*/*/*",
-                "arn:aws:eks:*:844333597536:cluster/*",
-                "arn:aws:eks:*:844333597536:addon/*/*/*"
+                "arn:aws:eks:*:xxxxxxxxxxxx:identityproviderconfig/*/*/*/*",
+                "arn:aws:eks:*:xxxxxxxxxxxx:fargateprofile/*/*/*",
+                "arn:aws:eks:*:xxxxxxxxxxxx:nodegroup/*/*/*",
+                "arn:aws:eks:*:xxxxxxxxxxxx:cluster/*",
+                "arn:aws:eks:*:xxxxxxxxxxxx:addon/*/*/*"
             ]
         },
         {
