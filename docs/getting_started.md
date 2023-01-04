@@ -20,31 +20,43 @@ cat >my-policy.json <<EOF
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "Statement0",
             "Effect": "Allow",
             "Action": [
                 "eks:AccessKubernetesApi",
-                  "eks:DescribeAddon",
-                  "eks:DescribeAddonVersions",
-                  "eks:DescribeCluster",
-                  "eks:DescribeFargateProfile",
-                  "eks:DescribeIdentityProviderConfig",
-                  "eks:DescribeNodegroup",
-                  "eks:DescribeUpdate",
-                  "eks:ListAddons",
-                  "eks:ListClusters",
-                  "eks:ListFargateProfiles",
-                  "eks:ListIdentityProviderConfigs",
-                  "eks:ListNodegroups",
+                "eks:DescribeAddon",
+                "eks:DescribeAddonVersions",
+                "eks:DescribeCluster",
+                "eks:DescribeFargateProfile",
+                "eks:DescribeIdentityProviderConfig",
+                "eks:DescribeNodegroup",
+                "eks:DescribeUpdate",
+                "eks:ListAddons",
+                "eks:ListClusters",
+                "eks:ListFargateProfiles",
+                "eks:ListIdentityProviderConfigs",
+                "eks:ListNodegroups",
                 "eks:ListTagsForResource",
                 "eks:ListUpdates"
             ],
             "Resource": [
-                "arn:aws:eks:*:111122223333:identityproviderconfig/*/*/*/*",
-                "arn:aws:eks:*:111122223333:fargateprofile/*/*/*",
-                "arn:aws:eks:*:111122223333:nodegroup/*/*/*",
-                "arn:aws:eks:*:111122223333:cluster/*",
-                "arn:aws:eks:*:111122223333:addon/*/*/*"
+                "arn:aws:eks:*:844333597536:identityproviderconfig/*/*/*/*",
+                "arn:aws:eks:*:844333597536:fargateprofile/*/*/*",
+                "arn:aws:eks:*:844333597536:nodegroup/*/*/*",
+                "arn:aws:eks:*:844333597536:cluster/*",
+                "arn:aws:eks:*:844333597536:addon/*/*/*"
             ]
+        },
+        {
+            "Sid": "Statement1",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeInstances",
+                "ec2:DescribeFlowLogs",
+                "ecr:DescribeRepositories",
+                "inspector2:BatchGetAccountStatus"
+            ],
+            "Resource": "*"
         }
     ]
 }
