@@ -66,6 +66,28 @@ spec:
           status:
             description: AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
             properties:
+              accountData:
+                description: AccountData contains the AWS Account details
+                properties:
+                  id:
+                    type: string
+                  inspectorEnabledEC2:
+                    type: boolean
+                  inspectorEnabledECR:
+                    type: boolean
+                type: object
+              ecrRepositories:
+                items:
+                  description: ECRRepository contains container repository details
+                  properties:
+                    imageTagMutable:
+                      type: boolean
+                    repositoryName:
+                      type: string
+                    repositoryUri:
+                      type: string
+                  type: object
+                type: array
               eksCluster:
                 description: 'EKS cluster details fetched from AWS For details of
                   individual fields, refer to AWS SDK docs: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/eks@v1.22.1/types#Cluster'
@@ -215,6 +237,21 @@ spec:
                               type: object
                           type: object
                         type: array
+                      reservations:
+                        items:
+                          properties:
+                            instances:
+                              items:
+                                properties:
+                                  httpPutResponseHopLimit:
+                                    format: int32
+                                    type: integer
+                                  publicDnsName:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
                     type: object
                   createdAt:
                     type: string
@@ -276,6 +313,8 @@ spec:
                           endpointPrivateAccess:
                             type: boolean
                           endpointPublicAccess:
+                            type: boolean
+                          flowLogsEnabled:
                             type: boolean
                           publicAccessCIDRs:
                             items:
