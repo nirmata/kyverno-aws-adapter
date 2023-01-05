@@ -105,22 +105,37 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	clusterFound := false
 
-	if callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{}); err == nil && callerIdentity.Account != nil {
-		objNew.Status.AccountData.ID = callerIdentity.Account
-
-		x, err := inspector2Client.BatchGetAccountStatus(ctx, &inspector2.BatchGetAccountStatusInput{AccountIds: []string{*callerIdentity.Account}})
-		if err == nil {
-			objNew.Status.AccountData.InspectorEnabledEC2 = aws.Bool(x.Accounts[0].ResourceState.Ec2.Status == inspector2Types.StatusEnabled)
-			objNew.Status.AccountData.InspectorEnabledECR = aws.Bool(x.Accounts[0].ResourceState.Ecr.Status == inspector2Types.StatusEnabled)
-		} else {
-			msg := "error occurred while fetching inspector data"
-			l.Error(err, msg)
-			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil || callerIdentity.Account == nil {
+		if callerIdentity.Account == nil {
+			err = fmt.Errorf("callerIdentity nil")
 		}
-	} else {
+
 		msg := "error occurred while fetching account id"
 		l.Error(err, msg)
 		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	} else {
+		objNew.Status.AccountData.ID = callerIdentity.Account
+
+		x, err := inspector2Client.BatchGetAccountStatus(ctx, &inspector2.BatchGetAccountStatusInput{
+			AccountIds: []string{
+				*callerIdentity.Account,
+			},
+		})
+		if err != nil || len(x.Accounts) == 0 {
+			if len(x.Accounts) == 0 {
+				err = fmt.Errorf("empty Accounts array")
+			}
+
+			msg := "error occurred while fetching inspector data"
+			l.Error(err, msg)
+			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+		} else {
+			objNew.Status.AccountData.InspectorEnabledEC2 =
+				aws.Bool(x.Accounts[0].ResourceState.Ec2.Status == inspector2Types.StatusEnabled)
+			objNew.Status.AccountData.InspectorEnabledECR =
+				aws.Bool(x.Accounts[0].ResourceState.Ecr.Status == inspector2Types.StatusEnabled)
+		}
 	}
 
 	if x, err := eksClient.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
@@ -338,7 +353,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing identity provider configs", err, &l, time.Now())
 	}
 
-	if x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+	x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
 		Filters: []types.Filter{
 			{
 				Name: aws.String("tag:aws:eks:cluster-name"),
@@ -347,8 +362,11 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				},
 			},
 		},
-	},
-	); err == nil {
+	})
+	if err != nil {
+		l.Error(err, "error occurred while fetching EC2 instances")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
+	} else {
 		for _, r := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
 			for _, i := range r.Instances {
@@ -363,12 +381,13 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			}
 			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
 		}
-	} else {
-		l.Error(err, "error occurred while fetching EC2 instances")
-		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	}
 
-	if x, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{}); err == nil {
+	if x, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{}); err != nil {
+		msg := "error occurred while fetching ECR repositories data"
+		l.Error(err, msg)
+		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	} else {
 		repositories := []*securityv1alpha1.ECRRepository{}
 
 		for _, r := range x.Repositories {
@@ -380,10 +399,6 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 		objNew.Status.ECRRepositories = repositories
-	} else {
-		msg := "error occurred while fetching ECR repositories data"
-		l.Error(err, msg)
-		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
 	}
 
 	currentPollTimestamp := time.Now()
