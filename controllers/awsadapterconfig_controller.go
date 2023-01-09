@@ -51,8 +51,9 @@ const (
 // AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object
 type AWSAdapterConfigReconciler struct {
 	client.Client
-	Scheme          *runtime.Scheme
-	RequeueInterval time.Duration
+	Scheme                      *runtime.Scheme
+	RequeueInterval             time.Duration
+	updatedStatusOnceAfterStart bool
 }
 
 //+kubebuilder:rbac:groups=security.nirmata.io,resources=awsadapterconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -79,7 +80,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if !isStatusVacuous(&objOld.Status) {
-		if metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
+		if r.updatedStatusOnceAfterStart && metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
 			return ctrl.Result{}, nil
 		}
 	}
@@ -411,6 +412,8 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
 			l.Error(err, "error updating status")
+		} else {
+			r.updatedStatusOnceAfterStart = true
 		}
 	}
 
@@ -434,6 +437,8 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 
 	if err := r.Status().Update(ctx, objOld); err != nil {
 		l.Error(err, "error updating last poll's status failure")
+	} else {
+		r.updatedStatusOnceAfterStart = true
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
