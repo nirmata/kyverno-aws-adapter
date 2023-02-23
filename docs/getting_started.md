@@ -154,11 +154,11 @@ Perform the below steps to see if the adapter is installed correctly.
 ```bash
 # check if the controller pod is running.
 kubectl get pods -n nirmata-aws-adapter
-NAME                                              READY   STATUS    RESTARTS   AGE
-aws-adapter-kyverno-aws-adapter-997f45bb9-c2z5j   1/1     Running   0          109m
+NAME                                  READY   STATUS    RESTARTS   AGE
+kyverno-aws-adapter-997f45bb9-c2z5j   1/1     Running   0          109m
 
 # check the awsadapterconfig status.
 kubectl get awsacfg -n nirmata-aws-adapter
-NAME                             ...   CLUSTER NAME     ...  STATUS
-aws-adapter-kyverno-aws-adapter  ...   cluster-name     ...  success
+NAME                 ...   CLUSTER NAME     ...  LAST POLLED STATUS
+kyverno-aws-adapter  ...   cluster-name     ...  success
 ```
