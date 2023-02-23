@@ -40,11 +40,11 @@ cat >my-policy.json <<EOF
                 "eks:ListUpdates"
             ],
             "Resource": [
-                "arn:aws:eks:*:xxxxxxxxxxxx:identityproviderconfig/*/*/*/*",
-                "arn:aws:eks:*:xxxxxxxxxxxx:fargateprofile/*/*/*",
-                "arn:aws:eks:*:xxxxxxxxxxxx:nodegroup/*/*/*",
-                "arn:aws:eks:*:xxxxxxxxxxxx:cluster/*",
-                "arn:aws:eks:*:xxxxxxxxxxxx:addon/*/*/*"
+                "arn:aws:eks:*:<account-id>:identityproviderconfig/*/*/*/*",
+                "arn:aws:eks:*:<account-id>:fargateprofile/*/*/*",
+                "arn:aws:eks:*:<account-id>:nodegroup/*/*/*",
+                "arn:aws:eks:*:<account-id>:cluster/*",
+                "arn:aws:eks:*:<account-id>:addon/*/*/*"
             ]
         },
         {
@@ -80,7 +80,7 @@ Create an IAM Role that references the policy we created earlier.
 **Note:** We will use `eksctl` in this guide to create the IAM Role. The serviceaccount creation will be done by the Helm chart so that appropriate RBAC is assigned by the chart itself. If you wish to use your own serviceaccount, then make sure all the necessary rolebinding and clusterrolebinding are present.
 
 ```bash
-eksctl create iamserviceaccount --name nirmata-aws-adapter  --namespace nirmata-aws-adapter --cluster <cluster-name> --role-name nirmata-adapter-role --attach-policy-arn arn:aws:iam::111122223333:policy/kyverno-aws-adapter-policy   --role-only  --approve
+eksctl create iamserviceaccount --name nirmata-aws-adapter  --namespace nirmata-aws-adapter --cluster <cluster-name> --role-name nirmata-adapter-role --attach-policy-arn arn:aws:iam::<account-id>:policy/kyverno-aws-adapter-policy   --role-only  --approve
 ```
 
 This will create a new IAM Role that references the policy we created above. This also creates the trust-relationship for us. If you wish to create the IAM Role via the management console or the AWS CLI, make sure to create the trust-relationship so that the AWS Adapter can assume this Role to fetch EKS Cluster details.
@@ -96,7 +96,7 @@ eksCluster:
   name: cluster-name
   region: cluster-region
 
-roleArn: arn:aws:iam::111122223333:role/nirmata-adapter-role
+roleArn: arn:aws:iam::<account-id>:role/nirmata-adapter-role
 
 rbac:
   create: true
