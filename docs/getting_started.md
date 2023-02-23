@@ -1,6 +1,6 @@
 # Getting Started
 
-This is a guide on how to get started with the Nirmata Kyverno Adapter for AWS. To learn more about Kyverno, check out the official documentation.
+This is a guide on how to get started with the Nirmata Kyverno Adapter for AWS. To learn more about Kyverno, check out the [official documentation](https://kyverno.io/docs/).
 
 ## Prerequisites
 - a running EKS Cluster (refer to [Creating an Amazon EKS Cluster](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html))
