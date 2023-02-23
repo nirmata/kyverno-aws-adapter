@@ -108,7 +108,11 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil || callerIdentity == nil || callerIdentity.Account == nil {
-		if err == nil {
+		if err != nil {
+			l.Error(err, "GetCallerIdentity returned error")
+		}
+		
+		if callerIdentity == nil || callerIdentity.Account == nil {
 			err = fmt.Errorf("callerIdentity nil")
 		}
 
