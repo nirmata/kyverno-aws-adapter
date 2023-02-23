@@ -113,6 +113,8 @@ rbac:
 
 We will install the adapter in nirmata-aws-adapter namespace. Create the namespace using ```kubectl create namespace nirmata-aws-adapter```.
 
+**Note:** If the IAM Role was created using a different namespace name, then that name should be used instead of "nirmata-aws-adapter" while following the guide to ensure that the adapter is installed in the intended namespace and the IAM Role is associated with the correct namespace.
+
 Now let's install the Helm chart.
 
 ```bash
