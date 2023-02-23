@@ -98,8 +98,8 @@ As an example, here are the minimum values that you need to set.
 ```bash
 # cat myvalues.yaml
 eksCluster:
-  name: cluster-name
-  region: cluster-region
+  name: <cluster-name>
+  region: <cluster-region>
 
 roleArn: arn:aws:iam::<account-id>:role/nirmata-adapter-role
 
