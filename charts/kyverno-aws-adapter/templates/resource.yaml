@@ -1,9 +1,0 @@
-apiVersion: security.nirmata.io/v1alpha1
-kind: AWSAdapterConfig
-metadata:
-  name: {{ include "kyverno-aws-adapter.fullname" . }}
-  labels:
-    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
-spec:
-  name: {{ required "EKS cluster name is required" .Values.eksCluster.name }}
-  region: {{ required "EKS cluster region is required" .Values.eksCluster.region }}
