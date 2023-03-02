@@ -26,6 +26,15 @@ spec:
         image: {{ include "kyverno-aws-adapter.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
+        env:
+        - name: ADAPTER_NAME
+          value: {{ include "kyverno-aws-adapter.fullname" . }}
+        - name: ADAPTER_NAMESPACE
+          value: {{ .Release.Namespace }}
+        - name: CLUSTER_NAME
+          value: {{ required "EKS cluster name is required" .Values.eksCluster.name }}
+        - name: CLUSTER_REGION
+          value: {{ required "EKS cluster region is required" .Values.eksCluster.region }}
         {{- if .Values.pollInterval }}
         args:
         - --sync-period={{ .Values.pollInterval }}
