@@ -19,11 +19,13 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -442,6 +444,59 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+}
+
+func (r *AWSAdapterConfigReconciler) CreateCRIfNotPresent() {
+	l := log.FromContext(context.TODO())
+
+	l.Info("Creating AWS SDK config")
+
+	clusterName := getClusterName()
+	clusterRegion := getClusterRegion()
+	res := &securityv1alpha1.AWSAdapterConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      getAdapterName(),
+			Namespace: getAdapterNamespace(),
+		},
+		Spec: securityv1alpha1.AWSAdapterConfigSpec{
+			Name:   &clusterName,
+			Region: &clusterRegion,
+		},
+	}
+
+	err := r.Create(context.TODO(), res)
+	if err == nil {
+		l.Info("AWS SDK config created successfully")
+	} else {
+		if errors.IsAlreadyExists(err) {
+			l.Info("AWS SDK config already exists. Skipping resource creation.")
+		} else {
+			l.Error(err, "Error creating AWS SDK config")
+		}
+	}
+}
+
+const (
+	ADAPTER_NAME_ENV_VAR      = "ADAPTER_NAME"
+	ADAPTER_NAMESPACE_ENV_VAR = "ADAPTER_NAMESPACE"
+	CLUSTER_NAME_ENV_VAR      = "CLUSTER_NAME"
+	CLUSTER_REGION_ENV_VAR    = "CLUSTER_REGION"
+)
+
+func getAdapterName() string {
+	return os.Getenv(ADAPTER_NAME_ENV_VAR)
+}
+
+func getAdapterNamespace() string {
+	return os.Getenv(ADAPTER_NAMESPACE_ENV_VAR)
+}
+
+func getClusterName() string {
+	return os.Getenv(CLUSTER_NAME_ENV_VAR)
+}
+
+func getClusterRegion() string {
+	return os.Getenv(CLUSTER_REGION_ENV_VAR)
 }
 
 func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {

@@ -92,11 +92,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.AWSAdapterConfigReconciler{
+	reconciler := &controllers.AWSAdapterConfigReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
 		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
-	}).SetupWithManager(mgr); err != nil {
+	}
+	if err = reconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSAdapterConfig")
 		os.Exit(1)
 	}
@@ -110,6 +111,8 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	reconciler.CreateCRIfNotPresent()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
