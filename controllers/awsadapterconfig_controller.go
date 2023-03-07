@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	apimachineryTypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -446,17 +447,34 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
-func (r *AWSAdapterConfigReconciler) CreateCRIfNotPresent() {
+func (r *AWSAdapterConfigReconciler) IsCRPresent() bool {
+	l := log.FromContext(context.TODO())
+
+	obj := &securityv1alpha1.AWSAdapterConfig{}
+	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: getAdapterNamespace(), Name: getAdapterName()}, obj)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			l.Error(err, "Error checking if AWS SDK config exists")
+		}
+
+		return false
+	}
+	return true
+}
+
+func (r *AWSAdapterConfigReconciler) CreateCR() {
 	l := log.FromContext(context.TODO())
 
 	l.Info("Creating AWS SDK config")
 
 	clusterName := getClusterName()
 	clusterRegion := getClusterRegion()
+	adapterName := getAdapterName()
+	adapterNamespace := getAdapterNamespace()
 	res := &securityv1alpha1.AWSAdapterConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      getAdapterName(),
-			Namespace: getAdapterNamespace(),
+			Name:      adapterName,
+			Namespace: adapterNamespace,
 		},
 		Spec: securityv1alpha1.AWSAdapterConfigSpec{
 			Name:   &clusterName,
@@ -468,11 +486,7 @@ func (r *AWSAdapterConfigReconciler) CreateCRIfNotPresent() {
 	if err == nil {
 		l.Info("AWS SDK config created successfully")
 	} else {
-		if errors.IsAlreadyExists(err) {
-			l.Info("AWS SDK config already exists. Skipping resource creation.")
-		} else {
-			l.Error(err, "Error creating AWS SDK config")
-		}
+		l.Error(err, "Error creating AWS SDK config")
 	}
 }
 

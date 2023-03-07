@@ -29,6 +29,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -92,12 +93,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	reconciler := &controllers.AWSAdapterConfigReconciler{
-		Client:          mgr.GetClient(),
+	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "unable to create client")
+		os.Exit(1)
+	}
+
+	r := &controllers.AWSAdapterConfigReconciler{
+		Client:          cl,
 		Scheme:          mgr.GetScheme(),
 		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
 	}
-	if err = reconciler.SetupWithManager(mgr); err != nil {
+	if err = r.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSAdapterConfig")
 		os.Exit(1)
 	}
@@ -112,7 +119,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	reconciler.CreateCRIfNotPresent()
+	if !r.IsCRPresent() {
+		r.CreateCR()
+	} else {
+		ctrl.Log.Info("AWS SDK config already exists. Skipping resource creation.")
+	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
