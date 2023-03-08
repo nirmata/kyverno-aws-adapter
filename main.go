@@ -93,14 +93,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
-	if err != nil {
-		setupLog.Error(err, "unable to create client")
-		os.Exit(1)
-	}
-
 	r := &controllers.AWSAdapterConfigReconciler{
-		Client:          cl,
+		Client:          getClient(),
 		Scheme:          mgr.GetScheme(),
 		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
 	}
@@ -119,6 +113,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	createAWSAdapterConfigIfNotPresent(r)
+
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
+	}
+}
+
+func getClient() client.Client {
+	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "unable to create client")
+		os.Exit(1)
+	}
+	return cl
+}
+
+func createAWSAdapterConfigIfNotPresent(r *controllers.AWSAdapterConfigReconciler) {
 	if isCRPresent, err := r.IsCRPresent(); err != nil {
 		setupLog.Error(err, "problem checking if AWS Adapter config exists")
 		os.Exit(1)
@@ -131,11 +144,5 @@ func main() {
 			os.Exit(1)
 		}
 		setupLog.Info("AWS Adapter config created successfully")
-	}
-
-	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
 	}
 }
