@@ -447,31 +447,24 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
-func (r *AWSAdapterConfigReconciler) IsCRPresent() bool {
-	l := log.FromContext(context.TODO())
-
+func (r *AWSAdapterConfigReconciler) IsCRPresent() (bool, error) {
 	obj := &securityv1alpha1.AWSAdapterConfig{}
 	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: getAdapterNamespace(), Name: getAdapterName()}, obj)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			l.Error(err, "Error checking if AWS SDK config exists")
-		}
-
-		return false
+	if err == nil {
+		return true, nil
 	}
-	return true
+	if errors.IsNotFound(err) {
+		return false, nil
+	}
+	return false, err
 }
 
-func (r *AWSAdapterConfigReconciler) CreateCR() {
-	l := log.FromContext(context.TODO())
-
-	l.Info("Creating AWS SDK config")
-
+func (r *AWSAdapterConfigReconciler) CreateCR() error {
 	clusterName := getClusterName()
 	clusterRegion := getClusterRegion()
 	adapterName := getAdapterName()
 	adapterNamespace := getAdapterNamespace()
-	res := &securityv1alpha1.AWSAdapterConfig{
+	return r.Create(context.TODO(), &securityv1alpha1.AWSAdapterConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      adapterName,
 			Namespace: adapterNamespace,
@@ -480,14 +473,7 @@ func (r *AWSAdapterConfigReconciler) CreateCR() {
 			Name:   &clusterName,
 			Region: &clusterRegion,
 		},
-	}
-
-	err := r.Create(context.TODO(), res)
-	if err == nil {
-		l.Info("AWS SDK config created successfully")
-	} else {
-		l.Error(err, "Error creating AWS SDK config")
-	}
+	})
 }
 
 const (

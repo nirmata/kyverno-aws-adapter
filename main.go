@@ -119,10 +119,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if !r.IsCRPresent() {
-		r.CreateCR()
+	if isCRPresent, err := r.IsCRPresent(); err != nil {
+		setupLog.Error(err, "problem checking if AWS SDK config exists")
+		os.Exit(1)
+	} else if isCRPresent {
+		setupLog.Info("AWS SDK config already exists. Skipping resource creation.")
 	} else {
-		ctrl.Log.Info("AWS SDK config already exists. Skipping resource creation.")
+		setupLog.Info("creating AWS SDK config")
+		if err := r.CreateCR(); err != nil {
+			setupLog.Error(err, "unable to create AWS SDK config")
+			os.Exit(1)
+		}
+		setupLog.Info("AWS SDK config created successfully")
 	}
 
 	setupLog.Info("starting manager")
