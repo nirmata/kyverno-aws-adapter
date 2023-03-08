@@ -120,17 +120,17 @@ func main() {
 	}
 
 	if isCRPresent, err := r.IsCRPresent(); err != nil {
-		setupLog.Error(err, "problem checking if AWS SDK config exists")
+		setupLog.Error(err, "problem checking if AWS Adapter config exists")
 		os.Exit(1)
 	} else if isCRPresent {
-		setupLog.Info("AWS SDK config already exists. Skipping resource creation.")
+		setupLog.Info("AWS Adapter config already exists. Skipping resource creation.")
 	} else {
-		setupLog.Info("creating AWS SDK config")
-		if err := r.CreateCR(); err != nil {
-			setupLog.Error(err, "unable to create AWS SDK config")
+		setupLog.Info("creating AWS Adapter config")
+		if err := r.CreateAWSAdapterConfig(); err != nil {
+			setupLog.Error(err, "unable to create AWS Adapter config")
 			os.Exit(1)
 		}
-		setupLog.Info("AWS SDK config created successfully")
+		setupLog.Info("AWS Adapter config created successfully")
 	}
 
 	setupLog.Info("starting manager")

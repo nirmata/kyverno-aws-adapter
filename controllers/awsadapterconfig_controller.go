@@ -89,13 +89,13 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 	l.Info("Reconciling", "req", req)
 
-	l.Info("Loading AWS SDK config")
+	l.Info("Loading AWS Adapter config")
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*objOld.Spec.Region))
 	if err != nil {
-		l.Error(err, "error occurred while loading aws sdk config")
-		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
+		l.Error(err, "error occurred while loading aws adapter config")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws adapter config", err, &l, time.Now())
 	}
-	l.Info("AWS SDK config loaded successfully")
+	l.Info("AWS Adapter config loaded successfully")
 
 	stsClient := sts.NewFromConfig(cfg)
 	ec2Client := ec2.NewFromConfig(cfg)
@@ -459,7 +459,7 @@ func (r *AWSAdapterConfigReconciler) IsCRPresent() (bool, error) {
 	return false, err
 }
 
-func (r *AWSAdapterConfigReconciler) CreateCR() error {
+func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig() error {
 	clusterName := getClusterName()
 	clusterRegion := getClusterRegion()
 	adapterName := getAdapterName()
