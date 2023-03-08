@@ -79,21 +79,22 @@ docker-build: test ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
-# PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
+# PLATFORMS defines the target platforms    the manager image be build to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - able to use docker buildx . More info: https://docs.docker.com/build/buildx/
 # - have enable BuildKit, More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 # - be able to push the image for your registry (i.e. if you do not inform a valid value via IMG=<myregistry/image:<tag>> than the export will fail)
 # To properly provided solutions that supports more than one platform you should use this option.
 PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+
 .PHONY: docker-buildx
 docker-buildx: test ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- docker buildx create --name project-v3-builder
+	docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross
-	- docker buildx rm project-v3-builder
+	docker buildx build --file Dockerfile.cross --push --progress plain --platform $(PLATFORMS) --tag ${IMG} .
+	docker buildx rm project-v3-builder
 	rm Dockerfile.cross
 
 ##@ Deployment
@@ -109,15 +110,6 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
-
-.PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
-
-.PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Build Dependencies
 
@@ -150,3 +142,18 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+###########
+# CODEGEN #
+###########
+
+.PHONY: codegen-helm-docs
+codegen-helm-docs: ## Generate helm docs
+	@echo Generate helm docs... >&2
+	@docker run -v ${PWD}/charts:/work -w /work jnorwood/helm-docs:v1.11.0 -s file
+
+.PHONY: verify-helm-docs
+verify-helm-docs: codegen-helm-docs ## Check helm docs are up to date
+	@echo Checking helm docs are up to date... >&2
+	@git --no-pager diff charts
+	@git diff --quiet --exit-code charts

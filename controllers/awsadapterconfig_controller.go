@@ -29,10 +29,21 @@ import (
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecrTypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2Types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go/aws"
+	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
 )
 
 const (
@@ -43,8 +54,9 @@ const (
 // AWSAdapterConfigReconciler reconciles a AWSAdapterConfig object.
 type AWSAdapterConfigReconciler struct {
 	client.Client
-	Scheme          *runtime.Scheme
-	RequeueInterval time.Duration
+	Scheme                      *runtime.Scheme
+	RequeueInterval             time.Duration
+	updatedStatusOnceAfterStart bool
 }
 
 //+kubebuilder:rbac:groups=security.nirmata.io,resources=awsadapterconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -53,25 +65,25 @@ type AWSAdapterConfigReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the AWSAdapterConfig object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
 
 	objOld := &securityv1alpha1.AWSAdapterConfig{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, objOld)
+	err := r.Get(ctx, req.NamespacedName, objOld)
 	if err != nil {
-		l.Error(err, "error occurred while retrieving awsadapterconfig")
+		if client.IgnoreNotFound(err) == nil {
+			l.Info("Warning: Resource deleted or does not exist")
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if !objOld.DeletionTimestamp.IsZero() {
+		l.Info("Warning: Deleting resource. Hope this is done intentionally.")
 		return ctrl.Result{}, nil
 	}
 
-	if objOld.Status != (securityv1alpha1.AWSAdapterConfigStatus{}) {
-		if metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
+	if !isStatusVacuous(&objOld.Status) {
+		if r.updatedStatusOnceAfterStart && metav1.Now().Time.Before(objOld.Status.LastPollInfo.Timestamp.Add(r.RequeueInterval)) {
 			return ctrl.Result{}, nil
 		}
 	}
@@ -84,16 +96,59 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
 	}
 	l.Info("AWS SDK config loaded successfully")
-	svc := eks.NewFromConfig(cfg)
+
+	stsClient := sts.NewFromConfig(cfg)
+	ec2Client := ec2.NewFromConfig(cfg)
+	ecrClient := ecr.NewFromConfig(cfg)
+	eksClient := eks.NewFromConfig(cfg)
+	inspector2Client := inspector2.NewFromConfig(cfg)
 
 	objNew := objOld.DeepCopy()
 	objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{}
+	objNew.Status.AccountData = &securityv1alpha1.AccountData{}
 
-	// TODO: list all clusters instead of going through just first 100
 	clusterFound := false
-	if x, err := svc.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
+
+	callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil || callerIdentity == nil || callerIdentity.Account == nil {
+		if err == nil {
+			err = fmt.Errorf("callerIdentity nil")
+		}
+
+		msg := "error occurred while fetching account id"
+		l.Error(err, msg)
+		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	} else {
+		objNew.Status.AccountData.ID = callerIdentity.Account
+
+		x, err := inspector2Client.BatchGetAccountStatus(ctx, &inspector2.BatchGetAccountStatusInput{
+			AccountIds: []string{
+				*callerIdentity.Account,
+			},
+		})
+		if err != nil || len(x.Accounts) == 0 {
+			if len(x.Accounts) == 0 {
+				err = fmt.Errorf("empty Accounts array")
+			}
+
+			msg := "error occurred while fetching inspector data"
+			l.Error(err, msg)
+			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+		} else {
+			objNew.Status.AccountData.InspectorEnabledEC2 =
+				aws.Bool(x.Accounts[0].ResourceState.Ec2.Status == inspector2Types.StatusEnabled)
+			objNew.Status.AccountData.InspectorEnabledECR =
+				aws.Bool(x.Accounts[0].ResourceState.Ecr.Status == inspector2Types.StatusEnabled)
+		}
+	}
+
+	if x, err := eksClient.ListClusters(context.TODO(), &eks.ListClustersInput{}); err == nil {
+		if x.NextToken != nil {
+			l.Info("Warning: more than 100 clusters found in the AWS account, fetching only 100")
+		}
+
 		for _, v := range x.Clusters {
-			if c, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: &v}); err == nil {
+			if c, err := eksClient.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: &v}); err == nil {
 				if v == *objOld.Spec.Name && strings.ToLower(string(c.Cluster.Status)) != "deleting" {
 					clusterFound = true
 					break
@@ -115,7 +170,7 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, fmt.Sprintf("could not find cluster '%s' in the given region '%s'", *objOld.Spec.Name, *objOld.Spec.Region), fmt.Errorf("cluster not found"), &l, time.Now())
 	}
 
-	if x, err := svc.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.DescribeCluster(context.TODO(), &eks.DescribeClusterInput{Name: objOld.Spec.Name}); err == nil {
 		tmpEncConf := []*securityv1alpha1.EKSEncryptionConfig{}
 		for _, encConf := range x.Cluster.EncryptionConfig {
 			tmpEncConf = append(tmpEncConf, &securityv1alpha1.EKSEncryptionConfig{
@@ -124,36 +179,50 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			})
 		}
 
-		objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{
-			CreatedAt:         x.Cluster.CreatedAt.String(),
-			Endpoint:          x.Cluster.Endpoint,
-			ID:                x.Cluster.Id,
-			Name:              x.Cluster.Name,
-			PlatformVersion:   x.Cluster.PlatformVersion,
-			Region:            objOld.Spec.Region,
-			RoleArn:           x.Cluster.RoleArn,
-			Status:            string(x.Cluster.Status),
-			KubernetesVersion: x.Cluster.Version,
-			Arn:               x.Cluster.Arn,
-			Certificate:       x.Cluster.CertificateAuthority.Data,
-			EncryptionConfig:  tmpEncConf,
-			Networking: &securityv1alpha1.EKSNetworking{
-				VPC: &securityv1alpha1.EKSVpcConfig{
-					ClusterSecurityGroupID: x.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
-					EndpointPrivateAccess:  x.Cluster.ResourcesVpcConfig.EndpointPrivateAccess,
-					EndpointPublicAccess:   x.Cluster.ResourcesVpcConfig.EndpointPublicAccess,
-					PublicAccessCIDRs:      x.Cluster.ResourcesVpcConfig.PublicAccessCidrs,
-					SecurityGroupIDs:       x.Cluster.ResourcesVpcConfig.SecurityGroupIds,
-					SubnetIDs:              x.Cluster.ResourcesVpcConfig.SubnetIds,
-					VpcID:                  x.Cluster.ResourcesVpcConfig.VpcId,
+		if describeFlowLogsOutput, err := ec2Client.DescribeFlowLogs(context.TODO(), &ec2.DescribeFlowLogsInput{Filter: []types.Filter{
+			{
+				Name: aws.String("resource-id"),
+				Values: []string{
+					*x.Cluster.ResourcesVpcConfig.VpcId,
 				},
-				ServiceIPv4CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
-				ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
-				IPFamily:        string(x.Cluster.KubernetesNetworkConfig.IpFamily),
 			},
-			Compute: &securityv1alpha1.EKSCompute{},
-			Logging: &securityv1alpha1.EKSLogging{},
-			Tags:    x.Cluster.Tags,
+		}}); err == nil {
+			objNew.Status.EKSCluster = &securityv1alpha1.EKSCluster{
+				CreatedAt:         x.Cluster.CreatedAt.String(),
+				Endpoint:          x.Cluster.Endpoint,
+				ID:                x.Cluster.Id,
+				Name:              x.Cluster.Name,
+				PlatformVersion:   x.Cluster.PlatformVersion,
+				Region:            objOld.Spec.Region,
+				RoleArn:           x.Cluster.RoleArn,
+				Status:            string(x.Cluster.Status),
+				KubernetesVersion: x.Cluster.Version,
+				Arn:               x.Cluster.Arn,
+				Certificate:       x.Cluster.CertificateAuthority.Data,
+				EncryptionConfig:  tmpEncConf,
+				Networking: &securityv1alpha1.EKSNetworking{
+					VPC: &securityv1alpha1.EKSVpcConfig{
+						ClusterSecurityGroupID: x.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
+						EndpointPrivateAccess:  x.Cluster.ResourcesVpcConfig.EndpointPrivateAccess,
+						EndpointPublicAccess:   x.Cluster.ResourcesVpcConfig.EndpointPublicAccess,
+						PublicAccessCIDRs:      x.Cluster.ResourcesVpcConfig.PublicAccessCidrs,
+						SecurityGroupIDs:       x.Cluster.ResourcesVpcConfig.SecurityGroupIds,
+						SubnetIDs:              x.Cluster.ResourcesVpcConfig.SubnetIds,
+						VpcID:                  x.Cluster.ResourcesVpcConfig.VpcId,
+						FlowLogsEnabled:        aws.Bool(len(describeFlowLogsOutput.FlowLogs) != 0),
+					},
+					ServiceIPv4CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+					ServiceIPv6CIDR: x.Cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+					IPFamily:        string(x.Cluster.KubernetesNetworkConfig.IpFamily),
+				},
+				Compute: &securityv1alpha1.EKSCompute{},
+				Logging: &securityv1alpha1.EKSLogging{},
+				Tags:    x.Cluster.Tags,
+			}
+		} else {
+			msg := "error occurred while fetching VPC flow logs"
+			l.Error(err, msg)
+			return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
 		}
 
 		for _, v := range x.Cluster.Logging.ClusterLogging {
@@ -177,18 +246,18 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error fetching cluster details", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListFargateProfiles(context.TODO(), &eks.ListFargateProfilesInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListFargateProfiles(context.TODO(), &eks.ListFargateProfilesInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Compute.FargateProfiles = x.FargateProfileNames
 	} else {
 		l.Error(err, "error listing fargate profiles")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing fargate profiles", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		for _, v := range x.Nodegroups {
-			if y, err := svc.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
+			if y, err := eksClient.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
 				objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
-				launchTemplate := &securityv1alpha1.EC2LaunchTemplate{}
+				var launchTemplate *securityv1alpha1.EC2LaunchTemplate
 				if y.Nodegroup.LaunchTemplate != nil {
 					launchTemplate = &securityv1alpha1.EC2LaunchTemplate{
 						ID:      y.Nodegroup.LaunchTemplate.Id,
@@ -220,11 +289,14 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					})
 				}
 
-				remoteAccessConfig := &securityv1alpha1.EKSNodeGroupRemoteAccessConfig{}
+				var remoteAccessConfig *securityv1alpha1.EKSNodeGroupRemoteAccessConfig
 				if y.Nodegroup.RemoteAccess != nil {
-					remoteAccessConfig.Ec2SshKey = y.Nodegroup.RemoteAccess.Ec2SshKey
-					remoteAccessConfig.SourceSecurityGroups = y.Nodegroup.RemoteAccess.SourceSecurityGroups
+					remoteAccessConfig = &securityv1alpha1.EKSNodeGroupRemoteAccessConfig{
+						Ec2SshKey:            y.Nodegroup.RemoteAccess.Ec2SshKey,
+						SourceSecurityGroups: y.Nodegroup.RemoteAccess.SourceSecurityGroups,
+					}
 				}
+
 				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
 					Name: v,
 					ScalingConfig: &securityv1alpha1.EKSNodeGroupScalingConfig{
@@ -267,14 +339,14 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing nodegroups", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListAddons(context.TODO(), &eks.ListAddonsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListAddons(context.TODO(), &eks.ListAddonsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.Addons = x.Addons
 	} else {
 		l.Error(err, "error listing addons")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing addons", err, &l, time.Now())
 	}
 
-	if x, err := svc.ListIdentityProviderConfigs(context.TODO(), &eks.ListIdentityProviderConfigsInput{ClusterName: objOld.Spec.Name}); err == nil {
+	if x, err := eksClient.ListIdentityProviderConfigs(context.TODO(), &eks.ListIdentityProviderConfigsInput{ClusterName: objOld.Spec.Name}); err == nil {
 		objNew.Status.EKSCluster.IdentityProviderConfigs = []*string{}
 		for _, v := range x.IdentityProviderConfigs {
 			objNew.Status.EKSCluster.IdentityProviderConfigs = append(objNew.Status.EKSCluster.IdentityProviderConfigs, v.Name)
@@ -284,17 +356,69 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return r.updateLastPollStatusFailure(ctx, objOld, "error listing identity provider configs", err, &l, time.Now())
 	}
 
+	x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{
+				Name: aws.String("tag:aws:eks:cluster-name"),
+				Values: []string{
+					*objOld.Spec.Name,
+				},
+			},
+		},
+	})
+	if err != nil {
+		l.Error(err, "error occurred while fetching EC2 instances")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
+	} else {
+		for _, r := range x.Reservations {
+			tmpRes := []*securityv1alpha1.Reservation{}
+			for _, i := range r.Instances {
+				tmpIn := []*securityv1alpha1.Instance{}
+				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+					PublicDnsName:           i.PublicDnsName,
+					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+				})
+				tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+					Instances: tmpIn,
+				})
+			}
+			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
+		}
+	}
+
+	if x, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{}); err != nil {
+		msg := "error occurred while fetching ECR repositories data"
+		l.Error(err, msg)
+		return r.updateLastPollStatusFailure(ctx, objOld, msg, err, &l, time.Now())
+	} else {
+		repositories := []*securityv1alpha1.ECRRepository{}
+
+		for _, r := range x.Repositories {
+			repositories = append(repositories, &securityv1alpha1.ECRRepository{
+				RepositoryName:  r.RepositoryName,
+				RepositoryUri:   r.RepositoryUri,
+				ImageTagMutable: aws.Bool(r.ImageTagMutability == ecrTypes.ImageTagMutabilityMutable),
+			})
+		}
+
+		objNew.Status.ECRRepositories = repositories
+	}
+
 	currentPollTimestamp := time.Now()
 	objNew.Status.LastPollInfo = securityv1alpha1.LastPollInfo{
 		Timestamp: &metav1.Time{Time: currentPollTimestamp},
 		Status:    PollSuccess,
 	}
+
 	if !cmp.Equal(objNew.Status.EKSCluster, objOld.Status.EKSCluster) {
 		objNew.Status.LastUpdatedTimestamp = &metav1.Time{Time: currentPollTimestamp}
 		if err := r.Status().Update(ctx, objNew); err != nil {
 			l.Error(err, "error updating status")
+		} else {
+			r.updatedStatusOnceAfterStart = true
 		}
 	}
+
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
@@ -306,7 +430,6 @@ func (r *AWSAdapterConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Context, objOld *securityv1alpha1.AWSAdapterConfig, msg string, err error, l *logr.Logger, currentPollTimestamp time.Time) (ctrl.Result, error) {
-	// if objOld.Status.LastPollInfo != nil {
 	objOld.Status.LastPollInfo.Status = PollFailure
 	objOld.Status.LastPollInfo.Timestamp = &metav1.Time{Time: currentPollTimestamp}
 	objOld.Status.LastPollInfo.Failure = &securityv1alpha1.PollFailure{
@@ -316,7 +439,17 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 
 	if err := r.Status().Update(ctx, objOld); err != nil {
 		l.Error(err, "error updating last poll's status failure")
+	} else {
+		r.updatedStatusOnceAfterStart = true
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+}
+
+func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {
+	return (status.LastUpdatedTimestamp == nil &&
+		status.LastPollInfo == securityv1alpha1.LastPollInfo{} &&
+		status.AccountData == nil &&
+		status.EKSCluster == nil &&
+		(len(status.ECRRepositories) == 0))
 }

@@ -1,14 +1,11 @@
+{{- if .Values.rbac.create }}
 # permissions for end users to edit awsadapterconfigs.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
   labels:
-    app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: awsacfg-editor-role
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: nirmata-aws-adapter
-    app.kubernetes.io/part-of: nirmata-aws-adapter
-  name: awsacfg-manager-role
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - security.nirmata.io
@@ -41,21 +38,27 @@ rules:
   verbs:
   - update
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+  labels:
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ required "Role ARN is required" .Values.roleArn }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
   labels:
-    app.kubernetes.io/name: clusterrolebinding
-    app.kubernetes.io/instance: awsacfg-manager-rolebinding
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: nirmata-aws-adapter
-    app.kubernetes.io/part-of: nirmata-aws-adapter
-  name: awsacfg-manager-rolebinding
+    {{- include "kyverno-aws-adapter.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: awsacfg-manager-role
+  name: {{ include "kyverno-aws-adapter.fullname" . }}
 subjects:
 - kind: ServiceAccount
-  name: nirmata-aws-adapter-sa
-  namespace: {{ .Values.namespace.name }}
+  name: {{ include "kyverno-aws-adapter.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,39 @@
+# Default values for kyverno-aws-adapter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Override the name of the chart
+nameOverride:
+
+# -- Override the expanded name of the chart
+fullnameOverride:
+
+# -- Role for accessing AWS API (REQUIRED)
+roleArn:
+
+# -- Interval at which the controller reconciles in minutes
+pollInterval: 30
+
+eksCluster:
+  # -- EKS cluster name (REQUIRED)
+  name:
+  # -- EKS cluster region (REQUIRED)
+  region:
+
+rbac:
+  # -- Enable RBAC resources creation
+  create: true
+
+  serviceAccount:
+    # -- Service account name, you MUST provide one when `rbac.create` is set to `false`
+    name:
+
+image:
+  # -- Image repository
+  repository: ghcr.io/nirmata/kyverno-aws-adapter
+  # -- Image pull policy
+  pullPolicy: Always
+  # -- Image tag (defaults to chart app version)
+  tag:
+  # -- Image pull secrets
+  imagePullSecrets: []

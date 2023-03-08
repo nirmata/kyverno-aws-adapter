@@ -1,0 +1,54 @@
+project_name: kyverno-aws-adapter
+before:
+  hooks:
+    - go mod download
+builds:
+  - id: kyverno-aws-adapter
+    main: main.go
+    binary: kyverno-aws-adapter
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - s390x
+    ignore:
+      - goos: darwin
+        goarch: s390x
+      - goos: windows
+        goarch: s390x
+archives:
+  - id: kyverno-aws-adapter
+    name_template: |-
+      kyverno-aws-adapter_{{ .Tag }}_{{ .Os }}_{{ .Arch -}}
+      {{- with .Arm -}}
+        {{- if (eq . "6") -}}hf
+        {{- else -}}v{{- . -}}
+        {{- end -}}
+      {{- end -}}
+    builds:
+      - kyverno-aws-adapter
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      386: i386
+      amd64: x86_64
+    files:
+      - LICENSE
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+release:
+  prerelease: auto
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - typo
+      - '^test:'
