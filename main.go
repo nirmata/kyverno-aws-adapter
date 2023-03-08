@@ -132,10 +132,10 @@ func getClient() client.Client {
 }
 
 func createAWSAdapterConfigIfNotPresent(r *controllers.AWSAdapterConfigReconciler) {
-	if isCRPresent, err := r.IsCRPresent(); err != nil {
+	if isAWSAdapterConfigPresent, err := r.IsAWSAdapterConfigPresent(); err != nil {
 		setupLog.Error(err, "problem checking if AWS Adapter config exists")
 		os.Exit(1)
-	} else if isCRPresent {
+	} else if isAWSAdapterConfigPresent {
 		setupLog.Info("AWS Adapter config already exists. Skipping resource creation.")
 	} else {
 		setupLog.Info("creating AWS Adapter config")

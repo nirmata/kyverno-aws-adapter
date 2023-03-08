@@ -447,7 +447,7 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
-func (r *AWSAdapterConfigReconciler) IsCRPresent() (bool, error) {
+func (r *AWSAdapterConfigReconciler) IsAWSAdapterConfigPresent() (bool, error) {
 	obj := &securityv1alpha1.AWSAdapterConfig{}
 	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: getAdapterNamespace(), Name: getAdapterName()}, obj)
 	if err == nil {
