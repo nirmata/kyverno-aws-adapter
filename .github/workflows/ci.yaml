@@ -1,0 +1,30 @@
+name: Kyverno Test
+
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        path: kyverno-aws-adapter
+    - name: Clone Enterprise Kyverno
+      uses: actions/checkout@v3
+      with:
+        repository: nirmata/kyverno
+        path: kyverno
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+    - name: Run Kyverno CLI tests
+      run: go run ./cmd/cli/kubectl-kyverno test ../kyverno-aws-adapter
+      working-directory: kyverno
