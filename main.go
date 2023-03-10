@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	securityv1alpha1 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha1"
+	securityv1alpha2 "github.com/nirmata/kyverno-aws-adapter/api/v1alpha2"
 	"github.com/nirmata/kyverno-aws-adapter/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -47,6 +48,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(securityv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(securityv1alpha2.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

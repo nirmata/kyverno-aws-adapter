@@ -13,4 +13,20 @@ resources:
   kind: AWSAdapterConfig
   path: github.com/nirmata/kyverno-aws-adapter/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: nirmata.io
+  group: security
+  kind: AWSAdapterConfig
+  path: github.com/nirmata/kyverno-aws-adapter/api/v1alpha2
+  version: v1alpha2
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: nirmata.io
+  group: security
+  kind: AWSClusterResource
+  path: github.com/nirmata/kyverno-aws-adapter/api/v1alpha2
+  version: v1alpha2
 version: "3"

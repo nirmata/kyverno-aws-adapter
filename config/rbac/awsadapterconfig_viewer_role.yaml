@@ -1,0 +1,27 @@
+# permissions for end users to view awsadapterconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: awsadapterconfig-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/managed-by: kustomize
+  name: awsadapterconfig-viewer-role
+rules:
+- apiGroups:
+  - security.nirmata.io
+  resources:
+  - awsadapterconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - security.nirmata.io
+  resources:
+  - awsadapterconfigs/status
+  verbs:
+  - get

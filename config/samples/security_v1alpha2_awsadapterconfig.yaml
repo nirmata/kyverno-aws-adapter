@@ -1,0 +1,12 @@
+apiVersion: security.nirmata.io/v1alpha2
+kind: AWSAdapterConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: awsadapterconfig
+    app.kubernetes.io/instance: awsadapterconfig-sample
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+  name: awsadapterconfig-sample
+spec:
+  # TODO(user): Add fields here
