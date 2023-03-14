@@ -368,17 +368,41 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		l.Error(err, "error occurred while fetching EC2 instances")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	} else {
-		for _, r := range x.Reservations {
+		for _, res := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
-			for _, i := range r.Instances {
-				tmpIn := []*securityv1alpha1.Instance{}
-				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
-					PublicDnsName:           i.PublicDnsName,
-					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
-				})
-				tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
-					Instances: tmpIn,
-				})
+			for _, i := range res.Instances {
+				if amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
+					DryRun:   aws.Bool(false),
+					ImageIds: []string{*i.ImageId},
+				}); err != nil {
+					l.Error(err, "error occurred while fetching AMIs")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMIs", err, &l, time.Now())
+				} else {
+					ami := amis.Images[0]
+					tmpAmi := &securityv1alpha1.AmazonMachineImage{
+						Id:              ami.ImageId,
+						Name:            ami.Name,
+						Location:        ami.ImageLocation,
+						Type:            string(ami.ImageType),
+						Architecture:    string(ami.Architecture),
+						Public:          ami.Public,
+						PlatformDetails: ami.PlatformDetails,
+						Ownerid:         ami.OwnerId,
+						CreationTime:    ami.CreationDate,
+						DeprecationTime: ami.DeprecationTime,
+						State:           string(ami.State),
+					}
+
+					tmpIn := []*securityv1alpha1.Instance{}
+					tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+						PublicDnsName:           i.PublicDnsName,
+						HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+						AmazonMachineImage:      tmpAmi,
+					})
+					tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+						Instances: tmpIn,
+					})
+				}
 			}
 			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
 		}
