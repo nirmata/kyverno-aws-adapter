@@ -198,7 +198,7 @@ type LastPollInfo struct {
 
 // AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
 type AWSAdapterConfigRef struct {
-	Namespace string `json:"namespaced"`
+	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 }
 
