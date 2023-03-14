@@ -1,30 +1,27 @@
-name: Kyverno Test
+name: Kyverno CLI Test
 
 on:
   push:
     branches:
-    - 'main'
+      - 'main'
   pull_request:
     branches:
-    - 'main'
+      - 'main'
 
 jobs:
-  test:
+  cli-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        n4k-version: [v1.9.0-n4kbuild.3]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        path: kyverno-aws-adapter
-    - name: Clone Enterprise Kyverno
-      uses: actions/checkout@v3
-      with:
-        repository: nirmata/kyverno
-        path: kyverno
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.18
-    - name: Run Kyverno CLI tests
-      run: go run ./cmd/cli/kubectl-kyverno test ../kyverno-aws-adapter
-      working-directory: kyverno
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+      - name: Get kyverno binary
+        run: |
+          N4K_BINARY_VERSION=${{ matrix.n4k-version }} make get-kyverno-binary
+      - name: Run Kyverno CLI tests
+        run: make run-cli-test
