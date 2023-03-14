@@ -371,14 +371,10 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		for _, res := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
 			for _, i := range res.Instances {
-				if amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
-					DryRun:   aws.Bool(false),
-					ImageIds: []string{*i.ImageId},
-				}); err != nil {
-					l.Error(err, "error occurred while fetching AMIs")
-					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMIs", err, &l, time.Now())
+				if ami, err := getAmi(ctx, ec2Client, i.ImageId); err != nil {
+					l.Error(err, "error occurred while fetching AMI")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
 				} else {
-					ami := amis.Images[0]
 					tmpAmi := &securityv1alpha1.AmazonMachineImage{
 						Id:              ami.ImageId,
 						Name:            ami.Name,
@@ -466,6 +462,27 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+}
+
+func getAmi(ctx context.Context, ec2Client *ec2.Client, imageId *string) (*types.Image, error) {
+	amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
+		DryRun:   aws.Bool(false),
+		ImageIds: []string{*imageId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if amis == nil || len(amis.Images) == 0 {
+		err := fmt.Errorf("no AMI with ID %s found", *imageId)
+		return nil, err
+	}
+
+	ami := &amis.Images[0]
+	if ami == nil {
+		err := fmt.Errorf("failed to retrieve details for AMI with ID %s", *imageId)
+		return nil, err
+	}
+	return ami, nil
 }
 
 func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {
