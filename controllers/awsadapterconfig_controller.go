@@ -464,6 +464,11 @@ func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig() error {
 	clusterRegion := getClusterRegion()
 	adapterName := getAdapterName()
 	adapterNamespace := getAdapterNamespace()
+	
+	if len(clusterName) == 0 || len(clusterRegion) == 0 || len(adapterName) == 0 || len(adapterNamespace) == 0 {
+		return fmt.Errorf("one or more of the required parameters could not be found")
+	}
+
 	return r.Create(context.TODO(), &securityv1alpha1.AWSAdapterConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      adapterName,
