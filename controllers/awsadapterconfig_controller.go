@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -447,9 +446,9 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
 }
 
-func (r *AWSAdapterConfigReconciler) IsAWSAdapterConfigPresent() (bool, error) {
+func (r *AWSAdapterConfigReconciler) IsAWSAdapterConfigPresent(adapterName, adapterNamespace string) (bool, error) {
 	obj := &securityv1alpha1.AWSAdapterConfig{}
-	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: getAdapterNamespace(), Name: getAdapterName()}, obj)
+	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: adapterNamespace, Name: adapterName}, obj)
 	if err == nil {
 		return true, nil
 	}
@@ -459,16 +458,7 @@ func (r *AWSAdapterConfigReconciler) IsAWSAdapterConfigPresent() (bool, error) {
 	return false, err
 }
 
-func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig() error {
-	clusterName := getClusterName()
-	clusterRegion := getClusterRegion()
-	adapterName := getAdapterName()
-	adapterNamespace := getAdapterNamespace()
-	
-	if len(clusterName) == 0 || len(clusterRegion) == 0 || len(adapterName) == 0 || len(adapterNamespace) == 0 {
-		return fmt.Errorf("one or more of the required parameters could not be found")
-	}
-
+func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig(clusterName, clusterRegion, adapterName, adapterNamespace string) error {
 	return r.Create(context.TODO(), &securityv1alpha1.AWSAdapterConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      adapterName,
@@ -479,29 +469,6 @@ func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig() error {
 			Region: &clusterRegion,
 		},
 	})
-}
-
-const (
-	ADAPTER_NAME_ENV_VAR      = "ADAPTER_NAME"
-	ADAPTER_NAMESPACE_ENV_VAR = "ADAPTER_NAMESPACE"
-	CLUSTER_NAME_ENV_VAR      = "CLUSTER_NAME"
-	CLUSTER_REGION_ENV_VAR    = "CLUSTER_REGION"
-)
-
-func getAdapterName() string {
-	return os.Getenv(ADAPTER_NAME_ENV_VAR)
-}
-
-func getAdapterNamespace() string {
-	return os.Getenv(ADAPTER_NAMESPACE_ENV_VAR)
-}
-
-func getClusterName() string {
-	return os.Getenv(CLUSTER_NAME_ENV_VAR)
-}
-
-func getClusterRegion() string {
-	return os.Getenv(CLUSTER_REGION_ENV_VAR)
 }
 
 func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {

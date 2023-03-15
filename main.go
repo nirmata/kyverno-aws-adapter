@@ -131,18 +131,64 @@ func getClient() client.Client {
 	return cl
 }
 
+type requiredParams struct {
+	clusterName      string
+	clusterRegion    string
+	adapterName      string
+	adapterNamespace string
+}
+
+func (rp *requiredParams) areAllPresent() bool {
+	return rp.clusterName != "" && rp.clusterRegion != "" && rp.adapterName != "" && rp.adapterNamespace != ""
+}
+
 func createAWSAdapterConfigIfNotPresent(r *controllers.AWSAdapterConfigReconciler) {
-	if isAWSAdapterConfigPresent, err := r.IsAWSAdapterConfigPresent(); err != nil {
+	rp := requiredParams{
+		clusterName:      getClusterName(),
+		clusterRegion:    getClusterRegion(),
+		adapterName:      getAdapterName(),
+		adapterNamespace: getAdapterNamespace(),
+	}
+
+	if rp.areAllPresent() {
+		setupLog.Info("One or more of the required parameters could not be found")
+		return
+	}
+
+	if isAWSAdapterConfigPresent, err := r.IsAWSAdapterConfigPresent(rp.adapterName, rp.adapterNamespace); err != nil {
 		setupLog.Error(err, "problem checking if AWS Adapter config exists")
 		os.Exit(1)
 	} else if isAWSAdapterConfigPresent {
 		setupLog.Info("AWS Adapter config already exists. Skipping resource creation.")
 	} else {
 		setupLog.Info("creating AWS Adapter config")
-		if err := r.CreateAWSAdapterConfig(); err != nil {
+		if err := r.CreateAWSAdapterConfig(rp.clusterName, rp.clusterRegion, rp.adapterName, rp.adapterNamespace); err != nil {
 			setupLog.Error(err, "unable to create AWS Adapter config")
 			os.Exit(1)
 		}
 		setupLog.Info("AWS Adapter config created successfully")
 	}
+}
+
+const (
+	ADAPTER_NAME_ENV_VAR      = "ADAPTER_NAME"
+	ADAPTER_NAMESPACE_ENV_VAR = "ADAPTER_NAMESPACE"
+	CLUSTER_NAME_ENV_VAR      = "CLUSTER_NAME"
+	CLUSTER_REGION_ENV_VAR    = "CLUSTER_REGION"
+)
+
+func getAdapterName() string {
+	return os.Getenv(ADAPTER_NAME_ENV_VAR)
+}
+
+func getAdapterNamespace() string {
+	return os.Getenv(ADAPTER_NAMESPACE_ENV_VAR)
+}
+
+func getClusterName() string {
+	return os.Getenv(CLUSTER_NAME_ENV_VAR)
+}
+
+func getClusterRegion() string {
+	return os.Getenv(CLUSTER_REGION_ENV_VAR)
 }
