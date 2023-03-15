@@ -1,0 +1,95 @@
+apiVersion: security.nirmata.io/v1alpha1
+kind: AWSAdapterConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: awsadapterconfig
+    app.kubernetes.io/instance: awsacfg-sample
+    app.kubernetes.io/part-of: kyverno-aws-adapter
+    app.kubernetes.io/created-by: kyverno-aws-adapter
+  name: good-awsacfg
+  namespace: default
+spec:
+  name: test
+  region: us-west-1
+status:
+  accountData:
+    id: "844333597536"
+    inspectorEnabledEC2: true
+    inspectorEnabledECR: true
+  ecrRepositories:
+  - imageTagMutable: true
+    repositoryName: repository-name
+    repositoryUri: repository-uri
+  eksCluster:
+    addons:
+    - coredns
+    - kube-proxy
+    - vpc-cni
+    arn: arn:aws:eks:us-west-1:844333597536:cluster/aws-adapter
+    certificate: CertificateAuthorityData0==
+    compute:
+      nodeGroups:
+      - amiReleaseVersion: 1.24.10-20230217
+        amiType: AL2_x86_64
+        capacityType: ON_DEMAND
+        createdAt: 2023-03-07 05:25:07.757 +0000 UTC
+        diskSize: 6
+        instanceTypes:
+        - t3.micro
+        name: aws-adapter-node-group
+        nodeGroupArn: arn:aws:eks:us-west-1:844333597536:nodegroup/aws-adapter/aws-adapter-node-group/c0c35d43-e41b-63e0-d795-2b62e5f68c45
+        nodeRole: arn:aws:iam::844333597536:role/some-worker-node-policy
+        resources:
+          autoScalingGroups:
+          - eks-aws-adapter-node-group-c0c33333-e41b-63e0-d795-2b62e5f68c45
+        scalingConfig:
+          desiredSize: 2
+          maxSize: 2
+          minSize: 2
+        status: ACTIVE
+        subnets:
+        - subnet-24778d33
+        - subnet-3ee0f555
+        updateConfig:
+          maxUnavailable: 1
+      reservations:
+      - instances:
+        - httpPutResponseHopLimit: 1
+    createdAt: 2023-03-07 05:06:08.439 +0000 UTC
+    encryptionConfig:
+    - keyArn: arn:aws:kms:us-west-1:844333597536:key/abcd1234-5678-90ab-cdef-0123456789ab
+      resources:
+      - secrets
+    endpoint: https://99C71FD57BFEA9CC8EB2E3.gr7.us-west-1.eks.amazonaws.com
+    kubernetesVersion: "1.24"
+    logging:
+      apiServer: false
+      audit: true
+      authenticator: false
+      controllerManager: false
+      scheduler: false
+    name: aws-adapter
+    networking:
+      ipFamily: ipv4
+      serviceIPv4CIDR: 10.100.0.0/10
+      vpc:
+        clusterSecurityGroupID: sg-060c4c41cb11e5d1a
+        endpointPublicAccess: false
+        flowLogsEnabled: true
+        publicAccessCIDRs:
+        - 0.0.0.0/0
+        subnetIDs:
+        - subnet-24778d33
+        - subnet-3ee0f655
+        vpcID: vpc-1ef6fd78
+    platformVersion: eks.4
+    region: us-west-1
+    roleArn: arn:aws:iam::844333597536:role/standard-eks-role
+    status: ACTIVE
+    tags:
+      alpha.eksctl.io/cluster-oidc-enabled: "true"
+      department: some-department
+  lastPollInfo:
+    status: success
+    timestamp: "2023-03-07T16:13:33Z"
+  lastUpdatedTimestamp: "2023-03-07T16:13:33Z"
