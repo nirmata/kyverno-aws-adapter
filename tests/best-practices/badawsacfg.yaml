@@ -1,0 +1,29 @@
+apiVersion: security.nirmata.io/v1alpha1
+kind: AWSAdapterConfig
+metadata:
+  name: bad-awsacfg
+  namespace: default
+status:
+  accountData:
+    inspectorEnabledEC2: false
+    inspectorEnabledECR: false
+  ecrRepositories:
+  - imageTagMutable: false
+    repositoryName: repository-name
+    repositoryUri: repository-uri
+  eksCluster:
+    compute:
+      nodeGroups:
+      - remoteAccessConfig:
+          ec2SshKey: my-ssh-key
+      reservations:
+      - instances:
+        - httpPutResponseHopLimit: 2
+          publicDnsName: ec2-55-222-222-33.us-west-1.compute.amazonaws.com
+    logging:
+      audit: false
+    networking:
+      vpc:
+        endpointPublicAccess: true
+        flowLogsEnabled: false
+    roleArn: arn:aws:iam::844333597536:role/some-different-eks-role
