@@ -20,7 +20,7 @@ spec:
           kinds:
           - AWSAdapterConfig
     validate:
-      message: "AMIs must not be used after their deprecation time"
+      message: "This rule audits for AMIs that are past their deprecation time"
       foreach:
       - list: "request.object.status.eksCluster.compute.reservations[].instances[].amazonMachineImage"
         deny:
