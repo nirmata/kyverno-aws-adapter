@@ -248,6 +248,31 @@ spec:
                                     type: integer
                                   publicDnsName:
                                     type: string
+                                  amazonMachineImage:
+                                    properties:
+                                      id:
+                                        type: string
+                                      name:
+                                        type: string
+                                      location:
+                                        type: string
+                                      type:
+                                        type: string
+                                      architecture:
+                                        type: string
+                                      public:
+                                        type: boolean
+                                      platformDetails:
+                                        type: string
+                                      ownerId:
+                                        type: string
+                                      creationTime:
+                                        type: string
+                                      deprecationTime:
+                                        type: string
+                                      state:
+                                        type: string
+                                    type: object
                                 type: object
                               type: array
                           type: object

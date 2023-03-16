@@ -54,6 +54,7 @@ cat >my-policy.json <<EOF
             "Sid": "Statement1",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeImages",
                 "ec2:DescribeInstances",
                 "ec2:DescribeFlowLogs",
                 "ecr:DescribeRepositories",

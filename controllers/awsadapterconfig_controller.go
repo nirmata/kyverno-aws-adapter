@@ -370,17 +370,37 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		l.Error(err, "error occurred while fetching EC2 instances")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	} else {
-		for _, r := range x.Reservations {
+		for _, res := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
-			for _, i := range r.Instances {
-				tmpIn := []*securityv1alpha1.Instance{}
-				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
-					PublicDnsName:           i.PublicDnsName,
-					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
-				})
-				tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
-					Instances: tmpIn,
-				})
+			for _, i := range res.Instances {
+				if ami, err := getAmi(ctx, ec2Client, i.ImageId); err != nil {
+					l.Error(err, "error occurred while fetching AMI")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
+				} else {
+					tmpAmi := &securityv1alpha1.AmazonMachineImage{
+						Id:              ami.ImageId,
+						Name:            ami.Name,
+						Location:        ami.ImageLocation,
+						Type:            string(ami.ImageType),
+						Architecture:    string(ami.Architecture),
+						Public:          ami.Public,
+						PlatformDetails: ami.PlatformDetails,
+						Ownerid:         ami.OwnerId,
+						CreationTime:    ami.CreationDate,
+						DeprecationTime: ami.DeprecationTime,
+						State:           string(ami.State),
+					}
+
+					tmpIn := []*securityv1alpha1.Instance{}
+					tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+						PublicDnsName:           i.PublicDnsName,
+						HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+						AmazonMachineImage:      tmpAmi,
+					})
+					tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+						Instances: tmpIn,
+					})
+				}
 			}
 			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
 		}
@@ -469,6 +489,26 @@ func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig(clusterName, cluster
 			Region: &clusterRegion,
 		},
 	})
+
+func getAmi(ctx context.Context, ec2Client *ec2.Client, imageId *string) (*types.Image, error) {
+	amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
+		DryRun:   aws.Bool(false),
+		ImageIds: []string{*imageId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if amis == nil || len(amis.Images) == 0 {
+		err := fmt.Errorf("no AMI with ID %s found", *imageId)
+		return nil, err
+	}
+
+	ami := &amis.Images[0]
+	if ami == nil {
+		err := fmt.Errorf("failed to retrieve details for AMI with ID %s", *imageId)
+		return nil, err
+	}
+	return ami, nil
 }
 
 func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {

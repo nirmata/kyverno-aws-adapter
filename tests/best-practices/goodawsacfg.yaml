@@ -54,7 +54,19 @@ status:
           maxUnavailable: 1
       reservations:
       - instances:
-        - httpPutResponseHopLimit: 1
+        - amazonMachineImage:
+            architecture: x86_64
+            creationTime: "2023-03-05T17:40:14.000Z"
+            deprecationTime: "2025-03-05T17:40:14.000Z"
+            id: ami-0efaccd6711a132b2
+            location: amazon/amazon-eks-node-1.25-v11111111
+            name: amazon-eks-node-1.25-v11111111
+            ownerId: "111111111111"
+            platformDetails: Linux/UNIX
+            public: true
+            state: available
+            type: machine
+          httpPutResponseHopLimit: 1
     createdAt: 2023-03-07 05:06:08.439 +0000 UTC
     encryptionConfig:
     - keyArn: arn:aws:kms:us-west-1:844333597536:key/abcd1234-5678-90ab-cdef-0123456789ab
