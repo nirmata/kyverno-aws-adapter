@@ -15,6 +15,16 @@ results:
   resource: bad-awsacfg
   result: fail
   kind: AWSAdapterConfig
+- policy: check-ami-deprecation-time
+  rule: check-ami-deprecation-time
+  resource: good-awsacfg
+  result: pass
+  kind: AWSAdapterConfig
+- policy: check-ami-deprecation-time
+  rule: check-ami-deprecation-time
+  resource: bad-awsacfg
+  result: fail
+  kind: AWSAdapterConfig
 - policy: check-cluster-endpoint
   rule: check-cluster-endpoint
   resource: good-awsacfg

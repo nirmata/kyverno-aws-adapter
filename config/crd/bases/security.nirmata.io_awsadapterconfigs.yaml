@@ -243,6 +243,31 @@ spec:
                             instances:
                               items:
                                 properties:
+                                  amazonMachineImage:
+                                    properties:
+                                      architecture:
+                                        type: string
+                                      creationTime:
+                                        type: string
+                                      deprecationTime:
+                                        type: string
+                                      id:
+                                        type: string
+                                      location:
+                                        type: string
+                                      name:
+                                        type: string
+                                      ownerId:
+                                        type: string
+                                      platformDetails:
+                                        type: string
+                                      public:
+                                        type: boolean
+                                      state:
+                                        type: string
+                                      type:
+                                        type: string
+                                    type: object
                                   httpPutResponseHopLimit:
                                     format: int32
                                     type: integer
