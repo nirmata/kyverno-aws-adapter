@@ -29,6 +29,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -92,11 +93,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.AWSAdapterConfigReconciler{
-		Client:          mgr.GetClient(),
+	r := &controllers.AWSAdapterConfigReconciler{
+		Client:          getClient(),
 		Scheme:          mgr.GetScheme(),
 		RequeueInterval: time.Duration(syncPeriod) * time.Minute,
-	}).SetupWithManager(mgr); err != nil {
+	}
+	if err = r.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSAdapterConfig")
 		os.Exit(1)
 	}
@@ -111,9 +113,82 @@ func main() {
 		os.Exit(1)
 	}
 
+	createAWSAdapterConfigIfNotPresent(r)
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func getClient() client.Client {
+	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "unable to create client")
+		os.Exit(1)
+	}
+	return cl
+}
+
+type requiredParams struct {
+	clusterName      string
+	clusterRegion    string
+	adapterName      string
+	adapterNamespace string
+}
+
+func (rp *requiredParams) areAllPresent() bool {
+	return rp.clusterName != "" && rp.clusterRegion != "" && rp.adapterName != "" && rp.adapterNamespace != ""
+}
+
+func createAWSAdapterConfigIfNotPresent(r *controllers.AWSAdapterConfigReconciler) {
+	rp := requiredParams{
+		clusterName:      getClusterName(),
+		clusterRegion:    getClusterRegion(),
+		adapterName:      getAdapterName(),
+		adapterNamespace: getAdapterNamespace(),
+	}
+
+	if rp.areAllPresent() {
+		setupLog.Info("One or more of the required parameters could not be found: clusterName='%s' clusterRegion='%s' adapterName='%s' adapterNamespace='%s'", rp.clusterName, rp.clusterRegion, rp.adapterName, rp.adapterNamespace)
+		return
+	}
+
+	if isAWSAdapterConfigPresent, err := r.IsAWSAdapterConfigPresent(rp.adapterName, rp.adapterNamespace); err != nil {
+		setupLog.Error(err, "problem checking if AWS Adapter config exists")
+		os.Exit(1)
+	} else if isAWSAdapterConfigPresent {
+		setupLog.Info("AWS Adapter config already exists. Skipping resource creation.")
+	} else {
+		setupLog.Info("creating AWS Adapter config")
+		if err := r.CreateAWSAdapterConfig(rp.clusterName, rp.clusterRegion, rp.adapterName, rp.adapterNamespace); err != nil {
+			setupLog.Error(err, "unable to create AWS Adapter config")
+			os.Exit(1)
+		}
+		setupLog.Info("AWS Adapter config created successfully")
+	}
+}
+
+const (
+	ADAPTER_NAME_ENV_VAR      = "ADAPTER_NAME"
+	ADAPTER_NAMESPACE_ENV_VAR = "ADAPTER_NAMESPACE"
+	CLUSTER_NAME_ENV_VAR      = "CLUSTER_NAME"
+	CLUSTER_REGION_ENV_VAR    = "CLUSTER_REGION"
+)
+
+func getAdapterName() string {
+	return os.Getenv(ADAPTER_NAME_ENV_VAR)
+}
+
+func getAdapterNamespace() string {
+	return os.Getenv(ADAPTER_NAMESPACE_ENV_VAR)
+}
+
+func getClusterName() string {
+	return os.Getenv(CLUSTER_NAME_ENV_VAR)
+}
+
+func getClusterRegion() string {
+	return os.Getenv(CLUSTER_REGION_ENV_VAR)
 }
