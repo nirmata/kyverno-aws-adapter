@@ -37,11 +37,11 @@ spec:
             properties:
               name:
                 type: string
-              namespaced:
+              namespace:
                 type: string
             required:
             - name
-            - namespaced
+            - namespace
             type: object
           status:
             properties:
