@@ -489,6 +489,7 @@ func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig(clusterName, cluster
 			Region: &clusterRegion,
 		},
 	})
+}
 
 func getAmi(ctx context.Context, ec2Client *ec2.Client, imageId *string) (*types.Image, error) {
 	amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
