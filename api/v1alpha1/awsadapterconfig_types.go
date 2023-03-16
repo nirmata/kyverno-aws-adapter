@@ -115,8 +115,23 @@ type Reservation struct {
 }
 
 type Instance struct {
-	HttpPutResponseHopLimit *int32  `json:"httpPutResponseHopLimit,omitempty"`
-	PublicDnsName           *string `json:"publicDnsName,omitempty"`
+	HttpPutResponseHopLimit *int32              `json:"httpPutResponseHopLimit,omitempty"`
+	PublicDnsName           *string             `json:"publicDnsName,omitempty"`
+	AmazonMachineImage      *AmazonMachineImage `json:"amazonMachineImage,omitempty"`
+}
+
+type AmazonMachineImage struct {
+	Id              *string `json:"id,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Location        *string `json:"location,omitempty"`
+	Type            string  `json:"type,omitempty"`
+	Architecture    string  `json:"architecture,omitempty"`
+	Public          *bool   `json:"public,omitempty"`
+	PlatformDetails *string `json:"platformDetails,omitempty"`
+	Ownerid         *string `json:"ownerId,omitempty"`
+	CreationTime    *string `json:"creationTime,omitempty"`
+	DeprecationTime *string `json:"deprecationTime,omitempty"`
+	State           string  `json:"state,omitempty"`
 }
 
 // EKSNodeGroupResources contains info of ASG and remote access SG for node group

@@ -24,8 +24,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	apimachineryTypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -86,13 +88,13 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 	l.Info("Reconciling", "req", req)
 
-	l.Info("Loading AWS SDK config")
+	l.Info("Loading AWS Adapter config")
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*objOld.Spec.Region))
 	if err != nil {
-		l.Error(err, "error occurred while loading aws sdk config")
-		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws sdk config", err, &l, time.Now())
+		l.Error(err, "error occurred while loading aws adapter config")
+		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while loading aws adapter config", err, &l, time.Now())
 	}
-	l.Info("AWS SDK config loaded successfully")
+	l.Info("AWS Adapter config loaded successfully")
 
 	stsClient := sts.NewFromConfig(cfg)
 	ec2Client := ec2.NewFromConfig(cfg)
@@ -368,17 +370,37 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		l.Error(err, "error occurred while fetching EC2 instances")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	} else {
-		for _, r := range x.Reservations {
+		for _, res := range x.Reservations {
 			tmpRes := []*securityv1alpha1.Reservation{}
-			for _, i := range r.Instances {
-				tmpIn := []*securityv1alpha1.Instance{}
-				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
-					PublicDnsName:           i.PublicDnsName,
-					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
-				})
-				tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
-					Instances: tmpIn,
-				})
+			for _, i := range res.Instances {
+				if ami, err := getAmi(ctx, ec2Client, i.ImageId); err != nil {
+					l.Error(err, "error occurred while fetching AMI")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
+				} else {
+					tmpAmi := &securityv1alpha1.AmazonMachineImage{
+						Id:              ami.ImageId,
+						Name:            ami.Name,
+						Location:        ami.ImageLocation,
+						Type:            string(ami.ImageType),
+						Architecture:    string(ami.Architecture),
+						Public:          ami.Public,
+						PlatformDetails: ami.PlatformDetails,
+						Ownerid:         ami.OwnerId,
+						CreationTime:    ami.CreationDate,
+						DeprecationTime: ami.DeprecationTime,
+						State:           string(ami.State),
+					}
+
+					tmpIn := []*securityv1alpha1.Instance{}
+					tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+						PublicDnsName:           i.PublicDnsName,
+						HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+						AmazonMachineImage:      tmpAmi,
+					})
+					tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+						Instances: tmpIn,
+					})
+				}
 			}
 			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
 		}
@@ -442,6 +464,52 @@ func (r *AWSAdapterConfigReconciler) updateLastPollStatusFailure(ctx context.Con
 	}
 
 	return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+}
+
+func (r *AWSAdapterConfigReconciler) IsAWSAdapterConfigPresent(adapterName, adapterNamespace string) (bool, error) {
+	obj := &securityv1alpha1.AWSAdapterConfig{}
+	err := r.Get(context.TODO(), apimachineryTypes.NamespacedName{Namespace: adapterNamespace, Name: adapterName}, obj)
+	if err == nil {
+		return true, nil
+	}
+	if errors.IsNotFound(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func (r *AWSAdapterConfigReconciler) CreateAWSAdapterConfig(clusterName, clusterRegion, adapterName, adapterNamespace string) error {
+	return r.Create(context.TODO(), &securityv1alpha1.AWSAdapterConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      adapterName,
+			Namespace: adapterNamespace,
+		},
+		Spec: securityv1alpha1.AWSAdapterConfigSpec{
+			Name:   &clusterName,
+			Region: &clusterRegion,
+		},
+	})
+}
+
+func getAmi(ctx context.Context, ec2Client *ec2.Client, imageId *string) (*types.Image, error) {
+	amis, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
+		DryRun:   aws.Bool(false),
+		ImageIds: []string{*imageId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if amis == nil || len(amis.Images) == 0 {
+		err := fmt.Errorf("no AMI with ID %s found", *imageId)
+		return nil, err
+	}
+
+	ami := &amis.Images[0]
+	if ami == nil {
+		err := fmt.Errorf("failed to retrieve details for AMI with ID %s", *imageId)
+		return nil, err
+	}
+	return ami, nil
 }
 
 func isStatusVacuous(status *securityv1alpha1.AWSAdapterConfigStatus) bool {

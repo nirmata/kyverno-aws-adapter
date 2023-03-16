@@ -54,6 +54,7 @@ cat >my-policy.json <<EOF
             "Sid": "Statement1",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeImages",
                 "ec2:DescribeInstances",
                 "ec2:DescribeFlowLogs",
                 "ecr:DescribeRepositories",
@@ -161,4 +162,28 @@ kyverno-aws-adapter-997f45bb9-c2z5j   1/1     Running   0          109m
 kubectl get awsacfg -n nirmata-aws-adapter
 NAME                 ...   CLUSTER NAME     ...  LAST POLLED STATUS
 kyverno-aws-adapter  ...   cluster-name     ...  success
+```
+
+### Uninstalling the AWS Adapter Helm chart
+
+To uninstall the AWS Adapter Helm chart, use the following command.
+
+```bash
+helm uninstall kyverno-aws-adapter --namespace nirmata-aws-adapter
+```
+
+This removes all the Kubernetes components associated with the chart and deletes the release.
+
+The `awsadapterconfigs.security.nirmata.io` CRD created by this chart is not removed by default and should be manually cleaned up. So, after uninstalling helm chart the following command can be used to remove the CRD.
+
+```bash
+kubectl delete crd awsadapterconfigs.security.nirmata.io
+```
+
+### Deleting the AWSAdapterConfig
+
+The `AWSAdapterConfig` CR is not deleted by `helm uninstall` or by deleting the pod, and must be manually cleaned up.
+
+```bash
+kubectl delete awsacfg kyverno-aws-adapter -n nirmata-aws-adapter
 ```
