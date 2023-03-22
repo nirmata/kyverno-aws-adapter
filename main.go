@@ -151,7 +151,11 @@ func createAWSAdapterConfigIfNotPresent(r *controllers.AWSAdapterConfigReconcile
 	}
 
 	if !rp.areAllPresent() {
-		setupLog.Info("One or more of the required parameters could not be found: clusterName='%s' clusterRegion='%s' adapterName='%s' adapterNamespace='%s'", rp.clusterName, rp.clusterRegion, rp.adapterName, rp.adapterNamespace)
+		setupLog.Info("One or more of the required parameters could not be found:",
+			"clusterName", rp.clusterName,
+			"clusterRegion", rp.clusterRegion,
+			"adapterName", rp.adapterName,
+			"adapterNamespace", rp.adapterNamespace)
 		return
 	}
 
