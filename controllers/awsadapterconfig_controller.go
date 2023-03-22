@@ -125,9 +125,9 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				*callerIdentity.Account,
 			},
 		})
-		if err != nil || len(x.Accounts) == 0 {
-			if len(x.Accounts) == 0 {
-				err = fmt.Errorf("empty Accounts array")
+		if err != nil || x == nil || len(x.Accounts) == 0 {
+			if err == nil {
+				err = fmt.Errorf("no data found for the requested query, inspector2:BatchGetAccountStatus")
 			}
 
 			msg := "error occurred while fetching inspector data"
