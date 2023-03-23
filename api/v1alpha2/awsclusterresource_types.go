@@ -14,21 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type PollStatus string
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
-type AWSAdapterConfigSpec struct {
-	// EKS cluster's name
-	Name *string `json:"name"`
-	// EKS cluster's region
-	Region *string `json:"region"`
-}
+type PollStatus string
 
 // AccountData contains the AWS Account details
 type AccountData struct {
@@ -115,23 +110,8 @@ type Reservation struct {
 }
 
 type Instance struct {
-	HttpPutResponseHopLimit *int32              `json:"httpPutResponseHopLimit,omitempty"`
-	PublicDnsName           *string             `json:"publicDnsName,omitempty"`
-	AmazonMachineImage      *AmazonMachineImage `json:"amazonMachineImage,omitempty"`
-}
-
-type AmazonMachineImage struct {
-	Id              *string `json:"id,omitempty"`
-	Name            *string `json:"name,omitempty"`
-	Location        *string `json:"location,omitempty"`
-	Type            string  `json:"type,omitempty"`
-	Architecture    string  `json:"architecture,omitempty"`
-	Public          *bool   `json:"public,omitempty"`
-	PlatformDetails *string `json:"platformDetails,omitempty"`
-	Ownerid         *string `json:"ownerId,omitempty"`
-	CreationTime    *string `json:"creationTime,omitempty"`
-	DeprecationTime *string `json:"deprecationTime,omitempty"`
-	State           string  `json:"state,omitempty"`
+	HttpPutResponseHopLimit *int32  `json:"httpPutResponseHopLimit,omitempty"`
+	PublicDnsName           *string `json:"publicDnsName,omitempty"`
 }
 
 // EKSNodeGroupResources contains info of ASG and remote access SG for node group
@@ -216,8 +196,13 @@ type LastPollInfo struct {
 	Failure   *PollFailure `json:"failure,omitempty"`
 }
 
-// AWSAdapterConfigStatus defines the observed state of AWSAdapterConfig
-type AWSAdapterConfigStatus struct {
+// AWSAdapterConfigSpec defines the desired state of AWSAdapterConfig
+type AWSAdapterConfigRef struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+type AWSAdapterStatus struct {
 	// Timestamp when the Status was last updated
 	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
 	// Information on when the adapter last tried to fetch the EKS cluster details
@@ -231,31 +216,24 @@ type AWSAdapterConfigStatus struct {
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:resource:shortName="awsacfg"
 //+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="Cluster Name",type=string,JSONPath=`.spec.name`
-//+kubebuilder:printcolumn:name="Region",type=string,JSONPath=`.spec.region`
-//+kubebuilder:printcolumn:name="Cluster Status",type=string,JSONPath=`.status.eksCluster.status`
-//+kubebuilder:printcolumn:name="Kubernetes Version",type=string,JSONPath=`.status.eksCluster.kubernetesVersion`
-//+kubebuilder:printcolumn:name="Last Polled Status",type=string,JSONPath=`.status.lastPollInfo.status`
 
-// AWSAdapterConfig is the Schema for the awsadapterconfigs API
-// +kubebuilder:storageversion
-type AWSAdapterConfig struct {
+// AWSClusterResource is the Schema for the awsclusterreports API
+type AWSClusterResource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AWSAdapterConfigSpec   `json:"spec,omitempty"`
-	Status AWSAdapterConfigStatus `json:"status,omitempty"`
+	SpecRef AWSAdapterConfigRef `json:"specRef,omitempty"`
+	Status  AWSAdapterStatus    `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
 // AWSAdapterConfigList contains a list of AWSAdapterConfig
-type AWSAdapterConfigList struct {
+type AWSClusterResourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AWSAdapterConfig `json:"items"`
+	Items           []AWSClusterResource `json:"items"`
 }
 
 func init() {
