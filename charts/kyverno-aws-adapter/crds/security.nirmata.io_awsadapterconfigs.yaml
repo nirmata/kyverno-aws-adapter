@@ -113,6 +113,35 @@ spec:
                           description: EKSNodeGroup contains info of the EKS cluster's
                             node group
                           properties:
+                            amazonMachineImages:
+                              items:
+                                properties:
+                                  architecture:
+                                    type: string
+                                  creationTime:
+                                    type: string
+                                  deprecationTime:
+                                    type: string
+                                  id:
+                                    type: string
+                                  instanceType:
+                                    type: string
+                                  location:
+                                    type: string
+                                  name:
+                                    type: string
+                                  ownerId:
+                                    type: string
+                                  platformDetails:
+                                    type: string
+                                  public:
+                                    type: boolean
+                                  state:
+                                    type: string
+                                  type:
+                                    type: string
+                                type: object
+                              type: array
                             amiReleaseVersion:
                               type: string
                             amiType:
@@ -138,10 +167,6 @@ spec:
                                       type: string
                                     type: array
                                 type: object
-                              type: array
-                            instanceTypes:
-                              items:
-                                type: string
                               type: array
                             labels:
                               additionalProperties:
@@ -248,31 +273,6 @@ spec:
                                     type: integer
                                   publicDnsName:
                                     type: string
-                                  amazonMachineImage:
-                                    properties:
-                                      id:
-                                        type: string
-                                      name:
-                                        type: string
-                                      location:
-                                        type: string
-                                      type:
-                                        type: string
-                                      architecture:
-                                        type: string
-                                      public:
-                                        type: boolean
-                                      platformDetails:
-                                        type: string
-                                      ownerId:
-                                        type: string
-                                      creationTime:
-                                        type: string
-                                      deprecationTime:
-                                        type: string
-                                      state:
-                                        type: string
-                                    type: object
                                 type: object
                               type: array
                           type: object

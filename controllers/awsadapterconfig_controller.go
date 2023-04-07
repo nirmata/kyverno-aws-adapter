@@ -253,9 +253,9 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if x, err := eksClient.ListNodegroups(context.TODO(), &eks.ListNodegroupsInput{ClusterName: objOld.Spec.Name}); err == nil {
+		objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
 		for _, v := range x.Nodegroups {
 			if y, err := eksClient.DescribeNodegroup(context.TODO(), &eks.DescribeNodegroupInput{ClusterName: objOld.Spec.Name, NodegroupName: &v}); err == nil {
-				objNew.Status.EKSCluster.Compute.NodeGroups = []*securityv1alpha1.EKSNodeGroup{}
 				var launchTemplate *securityv1alpha1.EC2LaunchTemplate
 				if y.Nodegroup.LaunchTemplate != nil {
 					launchTemplate = &securityv1alpha1.EC2LaunchTemplate{
@@ -297,6 +297,57 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					}
 				}
 
+				amis := []securityv1alpha1.AmazonMachineImage{}
+				amisSeen := make(map[string]bool)
+				x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+					Filters: []types.Filter{
+						{
+							Name: aws.String("tag:aws:eks:cluster-name"),
+							Values: []string{
+								*objOld.Spec.Name,
+							},
+						},
+						{
+							Name: aws.String("tag:eks:nodegroup-name"),
+							Values: []string{
+								v,
+							},
+						},
+					},
+				})
+				if err != nil {
+					l.Error(err, "error occurred while fetching EC2 instances")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
+				}
+
+				for _, res := range x.Reservations {
+					for _, i := range res.Instances {
+						ami, err := getAmi(ctx, ec2Client, i.ImageId)
+						if err != nil {
+							l.Error(err, "error occurred while fetching AMI")
+							return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
+						}
+
+						if !amisSeen[*ami.ImageId] {
+							amisSeen[*ami.ImageId] = true
+							amis = append(amis, securityv1alpha1.AmazonMachineImage{
+								Id:              ami.ImageId,
+								Name:            ami.Name,
+								InstanceType:    string(i.InstanceType),
+								Location:        ami.ImageLocation,
+								Type:            string(ami.ImageType),
+								Architecture:    string(ami.Architecture),
+								Public:          ami.Public,
+								PlatformDetails: ami.PlatformDetails,
+								Ownerid:         ami.OwnerId,
+								CreationTime:    ami.CreationDate,
+								DeprecationTime: ami.DeprecationTime,
+								State:           string(ami.State),
+							})
+						}
+					}
+				}
+
 				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
 					Name: v,
 					ScalingConfig: &securityv1alpha1.EKSNodeGroupScalingConfig{
@@ -304,18 +355,18 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 						MinSize:     y.Nodegroup.ScalingConfig.MinSize,
 						MaxSize:     y.Nodegroup.ScalingConfig.MaxSize,
 					},
-					LaunchTemplate:     launchTemplate,
-					Status:             string(y.Nodegroup.Status),
-					AMIReleaseVersion:  y.Nodegroup.ReleaseVersion,
-					HealthIssues:       healthIssues,
-					AMIType:            string(y.Nodegroup.AmiType),
-					CapacityType:       string(y.Nodegroup.CapacityType),
-					CreatedAt:          y.Nodegroup.CreatedAt.String(),
-					DiskSize:           y.Nodegroup.DiskSize,
-					InstanceTypes:      y.Nodegroup.InstanceTypes,
-					NodegroupArn:       y.Nodegroup.NodegroupArn,
-					NodeRole:           y.Nodegroup.NodeRole,
-					RemoteAccessConfig: remoteAccessConfig,
+					LaunchTemplate:      launchTemplate,
+					Status:              string(y.Nodegroup.Status),
+					AMIReleaseVersion:   y.Nodegroup.ReleaseVersion,
+					HealthIssues:        healthIssues,
+					AMIType:             string(y.Nodegroup.AmiType),
+					AmazonMachineImages: amis,
+					CapacityType:        string(y.Nodegroup.CapacityType),
+					CreatedAt:           y.Nodegroup.CreatedAt.String(),
+					DiskSize:            y.Nodegroup.DiskSize,
+					NodegroupArn:        y.Nodegroup.NodegroupArn,
+					NodeRole:            y.Nodegroup.NodeRole,
+					RemoteAccessConfig:  remoteAccessConfig,
 					Resources: &securityv1alpha1.EKSNodeGroupResources{
 						RemoteAccessSecurityGroup: y.Nodegroup.Resources.RemoteAccessSecurityGroup,
 						AutoScalingGroups:         autoScalingGroups,
@@ -370,40 +421,20 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		l.Error(err, "error occurred while fetching EC2 instances")
 		return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 	} else {
+		tmpRes := []*securityv1alpha1.Reservation{}
 		for _, res := range x.Reservations {
-			tmpRes := []*securityv1alpha1.Reservation{}
+			tmpIn := []*securityv1alpha1.Instance{}
 			for _, i := range res.Instances {
-				if ami, err := getAmi(ctx, ec2Client, i.ImageId); err != nil {
-					l.Error(err, "error occurred while fetching AMI")
-					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
-				} else {
-					tmpAmi := &securityv1alpha1.AmazonMachineImage{
-						Id:              ami.ImageId,
-						Name:            ami.Name,
-						Location:        ami.ImageLocation,
-						Type:            string(ami.ImageType),
-						Architecture:    string(ami.Architecture),
-						Public:          ami.Public,
-						PlatformDetails: ami.PlatformDetails,
-						Ownerid:         ami.OwnerId,
-						CreationTime:    ami.CreationDate,
-						DeprecationTime: ami.DeprecationTime,
-						State:           string(ami.State),
-					}
-
-					tmpIn := []*securityv1alpha1.Instance{}
-					tmpIn = append(tmpIn, &securityv1alpha1.Instance{
-						PublicDnsName:           i.PublicDnsName,
-						HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
-						AmazonMachineImage:      tmpAmi,
-					})
-					tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
-						Instances: tmpIn,
-					})
-				}
+				tmpIn = append(tmpIn, &securityv1alpha1.Instance{
+					PublicDnsName:           i.PublicDnsName,
+					HttpPutResponseHopLimit: i.MetadataOptions.HttpPutResponseHopLimit,
+				})
 			}
-			objNew.Status.EKSCluster.Compute.Reservations = tmpRes
+			tmpRes = append(tmpRes, &securityv1alpha1.Reservation{
+				Instances: tmpIn,
+			})
 		}
+		objNew.Status.EKSCluster.Compute.Reservations = tmpRes
 	}
 
 	if x, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{}); err != nil {
