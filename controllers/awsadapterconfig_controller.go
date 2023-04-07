@@ -297,8 +297,6 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					}
 				}
 
-				amis := []securityv1alpha1.AmazonMachineImage{}
-				amisSeen := make(map[string]bool)
 				x, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
 					Filters: []types.Filter{
 						{
@@ -320,32 +318,24 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching EC2 instances", err, &l, time.Now())
 				}
 
-				for _, res := range x.Reservations {
-					for _, i := range res.Instances {
-						ami, err := getAmi(ctx, ec2Client, i.ImageId)
-						if err != nil {
-							l.Error(err, "error occurred while fetching AMI")
-							return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
-						}
-
-						if !amisSeen[*ami.ImageId] {
-							amisSeen[*ami.ImageId] = true
-							amis = append(amis, securityv1alpha1.AmazonMachineImage{
-								Id:              ami.ImageId,
-								Name:            ami.Name,
-								InstanceType:    string(i.InstanceType),
-								Location:        ami.ImageLocation,
-								Type:            string(ami.ImageType),
-								Architecture:    string(ami.Architecture),
-								Public:          ami.Public,
-								PlatformDetails: ami.PlatformDetails,
-								Ownerid:         ami.OwnerId,
-								CreationTime:    ami.CreationDate,
-								DeprecationTime: ami.DeprecationTime,
-								State:           string(ami.State),
-							})
-						}
-					}
+				ami, err := getAmi(ctx, ec2Client, x.Reservations[0].Instances[0].ImageId)
+				if err != nil {
+					l.Error(err, "error occurred while fetching AMI")
+					return r.updateLastPollStatusFailure(ctx, objOld, "error occurred while fetching AMI", err, &l, time.Now())
+				}
+				amazonMachineImage := securityv1alpha1.AmazonMachineImage{
+					Id:              ami.ImageId,
+					Name:            ami.Name,
+					InstanceType:    y.Nodegroup.InstanceTypes[0],
+					Location:        ami.ImageLocation,
+					Type:            string(ami.ImageType),
+					Architecture:    string(ami.Architecture),
+					Public:          ami.Public,
+					PlatformDetails: ami.PlatformDetails,
+					Ownerid:         ami.OwnerId,
+					CreationTime:    ami.CreationDate,
+					DeprecationTime: ami.DeprecationTime,
+					State:           string(ami.State),
 				}
 
 				objNew.Status.EKSCluster.Compute.NodeGroups = append(objNew.Status.EKSCluster.Compute.NodeGroups, &securityv1alpha1.EKSNodeGroup{
@@ -355,18 +345,18 @@ func (r *AWSAdapterConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 						MinSize:     y.Nodegroup.ScalingConfig.MinSize,
 						MaxSize:     y.Nodegroup.ScalingConfig.MaxSize,
 					},
-					LaunchTemplate:      launchTemplate,
-					Status:              string(y.Nodegroup.Status),
-					AMIReleaseVersion:   y.Nodegroup.ReleaseVersion,
-					HealthIssues:        healthIssues,
-					AMIType:             string(y.Nodegroup.AmiType),
-					AmazonMachineImages: amis,
-					CapacityType:        string(y.Nodegroup.CapacityType),
-					CreatedAt:           y.Nodegroup.CreatedAt.String(),
-					DiskSize:            y.Nodegroup.DiskSize,
-					NodegroupArn:        y.Nodegroup.NodegroupArn,
-					NodeRole:            y.Nodegroup.NodeRole,
-					RemoteAccessConfig:  remoteAccessConfig,
+					LaunchTemplate:     launchTemplate,
+					Status:             string(y.Nodegroup.Status),
+					AMIReleaseVersion:  y.Nodegroup.ReleaseVersion,
+					HealthIssues:       healthIssues,
+					AMIType:            string(y.Nodegroup.AmiType),
+					AmazonMachineImage: amazonMachineImage,
+					CapacityType:       string(y.Nodegroup.CapacityType),
+					CreatedAt:          y.Nodegroup.CreatedAt.String(),
+					DiskSize:           y.Nodegroup.DiskSize,
+					NodegroupArn:       y.Nodegroup.NodegroupArn,
+					NodeRole:           y.Nodegroup.NodeRole,
+					RemoteAccessConfig: remoteAccessConfig,
 					Resources: &securityv1alpha1.EKSNodeGroupResources{
 						RemoteAccessSecurityGroup: y.Nodegroup.Resources.RemoteAccessSecurityGroup,
 						AutoScalingGroups:         autoScalingGroups,

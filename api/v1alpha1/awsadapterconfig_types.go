@@ -82,26 +82,26 @@ type EKSCompute struct {
 
 // EKSNodeGroup contains info of the EKS cluster's node group
 type EKSNodeGroup struct {
-	Name                string                          `json:"name,omitempty"`
-	NodegroupArn        *string                         `json:"nodeGroupArn,omitempty"`
-	NodeRole            *string                         `json:"nodeRole,omitempty"`
-	CreatedAt           string                          `json:"createdAt,omitempty"`
-	Status              string                          `json:"status,omitempty"`
-	DiskSize            *int32                          `json:"diskSize,omitempty"`
-	AMIType             string                          `json:"amiType,omitempty"`
-	CapacityType        string                          `json:"capacityType,omitempty"`
-	AMIReleaseVersion   *string                         `json:"amiReleaseVersion,omitempty"`
-	Subnets             []string                        `json:"subnets,omitempty"`
-	AmazonMachineImages []AmazonMachineImage            `json:"amazonMachineImages,omitempty"`
-	UpdateConfig        *EKSNodeGroupUpdateConfig       `json:"updateConfig,omitempty"`
-	ScalingConfig       *EKSNodeGroupScalingConfig      `json:"scalingConfig,omitempty"`
-	LaunchTemplate      *EC2LaunchTemplate              `json:"launchTemplate,omitempty"`
-	RemoteAccessConfig  *EKSNodeGroupRemoteAccessConfig `json:"remoteAccessConfig,omitempty"`
-	Resources           *EKSNodeGroupResources          `json:"resources,omitempty"`
-	HealthIssues        []*EKSNodeGroupHealthIssue      `json:"healthIssues,omitempty"`
-	Taints              []*EKSNodeGroupTaint            `json:"taints,omitempty"`
-	Labels              map[string]string               `json:"labels,omitempty"`
-	Tags                map[string]string               `json:"tags,omitempty"`
+	Name               string                          `json:"name,omitempty"`
+	NodegroupArn       *string                         `json:"nodeGroupArn,omitempty"`
+	NodeRole           *string                         `json:"nodeRole,omitempty"`
+	CreatedAt          string                          `json:"createdAt,omitempty"`
+	Status             string                          `json:"status,omitempty"`
+	DiskSize           *int32                          `json:"diskSize,omitempty"`
+	AMIType            string                          `json:"amiType,omitempty"`
+	CapacityType       string                          `json:"capacityType,omitempty"`
+	AMIReleaseVersion  *string                         `json:"amiReleaseVersion,omitempty"`
+	Subnets            []string                        `json:"subnets,omitempty"`
+	AmazonMachineImage AmazonMachineImage              `json:"amazonMachineImage,omitempty"`
+	UpdateConfig       *EKSNodeGroupUpdateConfig       `json:"updateConfig,omitempty"`
+	ScalingConfig      *EKSNodeGroupScalingConfig      `json:"scalingConfig,omitempty"`
+	LaunchTemplate     *EC2LaunchTemplate              `json:"launchTemplate,omitempty"`
+	RemoteAccessConfig *EKSNodeGroupRemoteAccessConfig `json:"remoteAccessConfig,omitempty"`
+	Resources          *EKSNodeGroupResources          `json:"resources,omitempty"`
+	HealthIssues       []*EKSNodeGroupHealthIssue      `json:"healthIssues,omitempty"`
+	Taints             []*EKSNodeGroupTaint            `json:"taints,omitempty"`
+	Labels             map[string]string               `json:"labels,omitempty"`
+	Tags               map[string]string               `json:"tags,omitempty"`
 }
 
 // EKSNodeGroupUpdateConfig contains number/percentage of node groups that can be updated in parallel

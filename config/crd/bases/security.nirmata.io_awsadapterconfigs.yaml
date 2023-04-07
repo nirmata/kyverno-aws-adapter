@@ -113,35 +113,33 @@ spec:
                           description: EKSNodeGroup contains info of the EKS cluster's
                             node group
                           properties:
-                            amazonMachineImages:
-                              items:
-                                properties:
-                                  architecture:
-                                    type: string
-                                  creationTime:
-                                    type: string
-                                  deprecationTime:
-                                    type: string
-                                  id:
-                                    type: string
-                                  instanceType:
-                                    type: string
-                                  location:
-                                    type: string
-                                  name:
-                                    type: string
-                                  ownerId:
-                                    type: string
-                                  platformDetails:
-                                    type: string
-                                  public:
-                                    type: boolean
-                                  state:
-                                    type: string
-                                  type:
-                                    type: string
-                                type: object
-                              type: array
+                            amazonMachineImage:
+                              properties:
+                                architecture:
+                                  type: string
+                                creationTime:
+                                  type: string
+                                deprecationTime:
+                                  type: string
+                                id:
+                                  type: string
+                                instanceType:
+                                  type: string
+                                location:
+                                  type: string
+                                name:
+                                  type: string
+                                ownerId:
+                                  type: string
+                                platformDetails:
+                                  type: string
+                                public:
+                                  type: boolean
+                                state:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             amiReleaseVersion:
                               type: string
                             amiType:
