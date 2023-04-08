@@ -92,7 +92,7 @@ type EKSNodeGroup struct {
 	CapacityType       string                          `json:"capacityType,omitempty"`
 	AMIReleaseVersion  *string                         `json:"amiReleaseVersion,omitempty"`
 	Subnets            []string                        `json:"subnets,omitempty"`
-	InstanceTypes      []string                        `json:"instanceTypes,omitempty"`
+	AmazonMachineImage AmazonMachineImage              `json:"amazonMachineImage,omitempty"`
 	UpdateConfig       *EKSNodeGroupUpdateConfig       `json:"updateConfig,omitempty"`
 	ScalingConfig      *EKSNodeGroupScalingConfig      `json:"scalingConfig,omitempty"`
 	LaunchTemplate     *EC2LaunchTemplate              `json:"launchTemplate,omitempty"`
@@ -115,14 +115,14 @@ type Reservation struct {
 }
 
 type Instance struct {
-	HttpPutResponseHopLimit *int32              `json:"httpPutResponseHopLimit,omitempty"`
-	PublicDnsName           *string             `json:"publicDnsName,omitempty"`
-	AmazonMachineImage      *AmazonMachineImage `json:"amazonMachineImage,omitempty"`
+	HttpPutResponseHopLimit *int32  `json:"httpPutResponseHopLimit,omitempty"`
+	PublicDnsName           *string `json:"publicDnsName,omitempty"`
 }
 
 type AmazonMachineImage struct {
 	Id              *string `json:"id,omitempty"`
 	Name            *string `json:"name,omitempty"`
+	InstanceType    string  `json:"instanceType,omitempty"`
 	Location        *string `json:"location,omitempty"`
 	Type            string  `json:"type,omitempty"`
 	Architecture    string  `json:"architecture,omitempty"`
