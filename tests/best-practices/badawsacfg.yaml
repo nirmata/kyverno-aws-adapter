@@ -14,13 +14,13 @@ status:
   eksCluster:
     compute:
       nodeGroups:
-      - remoteAccessConfig:
+      - amazonMachineImage:
+          deprecationTime: "2023-01-05T17:40:14.000Z"
+        remoteAccessConfig:
           ec2SshKey: my-ssh-key
       reservations:
       - instances:
-        - amazonMachineImage:
-            deprecationTime: "2023-01-05T17:40:14.000Z"
-          httpPutResponseHopLimit: 2
+        - httpPutResponseHopLimit: 2
           publicDnsName: ec2-55-222-222-33.us-west-1.compute.amazonaws.com
     logging:
       audit: false
