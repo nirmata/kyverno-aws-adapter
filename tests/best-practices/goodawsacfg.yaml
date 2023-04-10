@@ -65,7 +65,7 @@ status:
           maxUnavailable: 1
       reservations:
       - instances:
-          httpPutResponseHopLimit: 1
+        - httpPutResponseHopLimit: 1
     createdAt: 2023-03-07 05:06:08.439 +0000 UTC
     encryptionConfig:
     - keyArn: arn:aws:kms:us-west-1:844333597536:key/abcd1234-5678-90ab-cdef-0123456789ab

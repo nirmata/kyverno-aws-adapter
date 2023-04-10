@@ -20,7 +20,7 @@ status:
           ec2SshKey: my-ssh-key
       reservations:
       - instances:
-          httpPutResponseHopLimit: 2
+        - httpPutResponseHopLimit: 2
           publicDnsName: ec2-55-222-222-33.us-west-1.compute.amazonaws.com
     logging:
       audit: false
