@@ -29,13 +29,24 @@ status:
     certificate: CertificateAuthorityData0==
     compute:
       nodeGroups:
-      - amiReleaseVersion: 1.24.10-20230217
+      - amazonMachineImage:
+          architecture: x86_64
+          creationTime: "2023-03-05T17:40:14.000Z"
+          deprecationTime: "2025-03-05T17:40:14.000Z"
+          id: ami-0efaccd6711a132b2
+          instanceType: t3.micro
+          location: amazon/amazon-eks-node-1.25-v11111111
+          name: amazon-eks-node-1.25-v11111111
+          ownerId: "111111111111"
+          platformDetails: Linux/UNIX
+          public: true
+          state: available
+          type: machine
+        amiReleaseVersion: 1.24.10-20230217
         amiType: AL2_x86_64
         capacityType: ON_DEMAND
         createdAt: 2023-03-07 05:25:07.757 +0000 UTC
         diskSize: 6
-        instanceTypes:
-        - t3.micro
         name: aws-adapter-node-group
         nodeGroupArn: arn:aws:eks:us-west-1:844333597536:nodegroup/aws-adapter/aws-adapter-node-group/c0c35d43-e41b-63e0-d795-2b62e5f68c45
         nodeRole: arn:aws:iam::844333597536:role/some-worker-node-policy
@@ -54,18 +65,6 @@ status:
           maxUnavailable: 1
       reservations:
       - instances:
-        - amazonMachineImage:
-            architecture: x86_64
-            creationTime: "2023-03-05T17:40:14.000Z"
-            deprecationTime: "2025-03-05T17:40:14.000Z"
-            id: ami-0efaccd6711a132b2
-            location: amazon/amazon-eks-node-1.25-v11111111
-            name: amazon-eks-node-1.25-v11111111
-            ownerId: "111111111111"
-            platformDetails: Linux/UNIX
-            public: true
-            state: available
-            type: machine
           httpPutResponseHopLimit: 1
     createdAt: 2023-03-07 05:06:08.439 +0000 UTC
     encryptionConfig:
