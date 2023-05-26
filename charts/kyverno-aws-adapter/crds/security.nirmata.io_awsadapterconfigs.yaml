@@ -33,6 +33,9 @@ spec:
     - jsonPath: .status.lastPollInfo.status
       name: Last Polled Status
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
