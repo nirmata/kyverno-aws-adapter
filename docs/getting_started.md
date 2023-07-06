@@ -11,7 +11,16 @@ This is a guide on how to get started with the Nirmata Kyverno Adapter for AWS. 
 
 ## Installing the Nirmata Kyverno Adapter for AWS
 
-There are a few steps we need to follow before installing the Helm chart.
+### Creating IAM OIDC provider
+
+An IAM Open ID Connect provider for the cluster is required to provide the reference in the IAM Role.
+
+```bash
+eksctl utils associate-iam-oidc-provider --cluster <cluster-name> --approve --region <region-code>
+```
+**Note:** Make a note of the Identity Provider ID (we need this if you are creating resources via cloudformation)
+
+There are a few steps we need to follow before installing the Helm chart. Follow the below steps to create resources individually or use this cloudformation template to auto generate the IAM resources.
 
 ### Creating the IAM Policy
 
@@ -70,14 +79,6 @@ aws iam create-policy --policy-name <aws-policy-name> --policy-document file://m
 
 **Note:** Make sure your AWS CLI is configured correctly. Follow the [official guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) for setting it up.
 
-### Creating IAM OIDC provider
-
-An IAM Open ID Connect provider for the cluster is required to provide the reference in the IAM Role.
-
-```bash
-eksctl utils associate-iam-oidc-provider --cluster <cluster-name> --approve --region <region-code>
-```
-
 ### Creating the IAM Role
 
 Create an IAM Role that references the policy we created earlier.
@@ -89,6 +90,15 @@ eksctl create iamserviceaccount --name nirmata-aws-adapter  --namespace nirmata-
 ```
 
 This will create a new IAM Role that references the policy we created above. This also creates the trust-relationship for us. If you wish to create the IAM Role via the management console or the AWS CLI, make sure to create the trust-relationship so that the AWS Adapter can assume this Role to fetch EKS Cluster details.
+
+### CloudFormation template to create IAM resources
+CloudFormation is an alternative to the manual steps above. If you have already created the IAM Role and IAM Policy manually, you may skip this step.
+Refer to [iam-cloudformation.json](./iam-cloudformation.json). Replace the following strings with the values that is relevant to your environment - `IDENTITY_PROVIDER_ID`, and `REGION`.
+
+Deploy the cloudformation template.
+```sh
+aws cloudformation deploy --template-file ./iam-cloudformation.json --stack-name nirmata-aws-adapter-stack
+```
 
 ### Installing the AWS Adapter Helm chart
 
@@ -112,8 +122,6 @@ rbac:
 
 **Note:** Update the myvalues.yaml file as per information specific to your account and cluster.
 
-We will install the adapter in nirmata-aws-adapter namespace. Create the namespace using ```kubectl create namespace nirmata-aws-adapter```.
-
 **Note:** If the IAM Role was created using a different namespace name, then that name should be used instead of "nirmata-aws-adapter" while following the guide to ensure that the adapter is installed in the intended namespace and the IAM Role is associated with the correct namespace.
 
 Now let's install the Helm chart.
@@ -122,7 +130,7 @@ Now let's install the Helm chart.
 helm repo add nirmata-kyverno-aws-adapter https://nirmata.github.io/kyverno-aws-adapter/
 helm repo update nirmata-kyverno-aws-adapter
 
-helm install kyverno-aws-adapter nirmata-kyverno-aws-adapter/kyverno-aws-adapter -f myvalues.yaml --namespace nirmata-aws-adapter
+helm install kyverno-aws-adapter nirmata-kyverno-aws-adapter/kyverno-aws-adapter -f myvalues.yaml --namespace nirmata-aws-adapter --create-namespace
 ```
 
 If everything goes well, you should see an output similar to this.
@@ -138,8 +146,8 @@ STATUS: deployed
 REVISION: 1
 TEST SUITE: None
 NOTES:
-Chart version: v0.1.0
-Kyverno-aws-adapter version: v0.1.0
+...
+...
 
 Thank you for installing kyverno-aws-adapter ! Your release is named kyverno-aws-adapter.
 
