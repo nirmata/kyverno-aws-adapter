@@ -1,0 +1,16 @@
+domain: nirmata.io
+layout:
+- go.kubebuilder.io/v3
+projectName: aws-adapter
+repo: github.com/nirmata/aws-adapter
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: nirmata.io
+  group: security
+  kind: AWSAdapterConfig
+  path: github.com/nirmata/aws-adapter/api/v1alpha1
+  version: v1alpha1
+version: "3"

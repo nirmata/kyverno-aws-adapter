@@ -1,0 +1,13 @@
+apiVersion: security.nirmata.io/v1alpha1
+kind: AWSAdapterConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: awsconfig
+    app.kubernetes.io/instance: awsconfig-sample
+    app.kubernetes.io/part-of: nirmata-aws-adapter
+    app.kubernetes.io/created-by: nirmata-aws-adapter
+  name: test-config
+  namespace: nirmata
+spec:
+  name: test
+  region: us-west-1
