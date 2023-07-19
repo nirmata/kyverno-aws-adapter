@@ -1,0 +1,89 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "IAM role for serviceaccount \"nirmata-aws-adapter/nirmata-aws-adapter\"",
+    "Resources": {
+        "Role1": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "nirmata-adapter-role",
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRoleWithWebIdentity"
+                            ],
+                            "Condition": {
+                                "StringEquals": {
+                                    "oidc.eks.us-west-1.amazonaws.com/id/IDENTITY_PROVIDER_ID:aud": "sts.amazonaws.com",
+                                    "oidc.eks.us-west-1.amazonaws.com/id/IDENTITY_PROVIDER_ID:sub": "system:serviceaccount:nirmata-aws-adapter:nirmata-aws-adapter"
+                                }
+                            },
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Federated": "arn:aws:iam::ACCOUNT_NUMBER:oidc-provider/oidc.eks.REGION.amazonaws.com/id/IDENTITY_PROVIDER_ID"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "nirmata-aws-adapter-policy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "Statement0",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "eks:AccessKubernetesApi",
+                                        "eks:DescribeAddon",
+                                        "eks:DescribeAddonVersions",
+                                        "eks:DescribeCluster",
+                                        "eks:DescribeFargateProfile",
+                                        "eks:DescribeIdentityProviderConfig",
+                                        "eks:DescribeNodegroup",
+                                        "eks:DescribeUpdate",
+                                        "eks:ListAddons",
+                                        "eks:ListClusters",
+                                        "eks:ListFargateProfiles",
+                                        "eks:ListIdentityProviderConfigs",
+                                        "eks:ListNodegroups",
+                                        "eks:ListTagsForResource",
+                                        "eks:ListUpdates"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:eks:*:ACCOUNT_NUMBER:identityproviderconfig/*/*/*/*",
+                                        "arn:aws:eks:*:ACCOUNT_NUMBER:fargateprofile/*/*/*",
+                                        "arn:aws:eks:*:ACCOUNT_NUMBER:nodegroup/*/*/*",
+                                        "arn:aws:eks:*:ACCOUNT_NUMBER:cluster/*",
+                                        "arn:aws:eks:*:ACCOUNT_NUMBER:addon/*/*/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "Statement1",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeImages",
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeFlowLogs",
+                                        "ecr:DescribeRepositories",
+                                        "inspector2:BatchGetAccountStatus"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "Role1": {
+            "Value": {
+                "Fn::GetAtt": "Role1.Arn"
+            }
+        }
+    }
+}
